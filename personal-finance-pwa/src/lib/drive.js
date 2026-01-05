@@ -112,25 +112,24 @@ export async function uploadFile(filename, data, token) {
 }
 
 export async function listDriveFiles(entityName, token) {
-    const q = `name contains '${entityName}-' and 'appDataFolder' in parents and trashed=false`;
+    gapi.client.setToken({access_token: token});
+    const response = await gapi.client.drive.files.list({
+        spaces: 'appDataFolder',
+        q: `name contains '${entityName}-'`,
+        fields: `files(id, name)`
+    });
 
-    const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id, name)`,
-        { headers: {Authorization: `Bearer ${token}`}}
-    );
-    if (!response.ok) throw new Error("List Files Failed");
-
-    const data = await response.json()
-
-    return data?.files;
+    return response.result?.files;
 }
 
 export async function downloadFile(fileID, token) {
-    const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileID}?alt=media`,
-        { headers: {Authorization: `Bearer ${token}`}}
-    );
-    return await response.json()
+    gapi.client.setToken({access_token: token});
+    const response = await gapi.client.drive.files.get({
+        fileId: fileID,
+        alt: 'media'
+    });
+
+    return response.result;
 }
 
 // async function ensureFolder(name, token) {

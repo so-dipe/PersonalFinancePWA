@@ -63,6 +63,5 @@ export async function syncAll() {
         return results;
     } catch (err) {
         console.log('Sync all failed, need to reauthenticate', err);
-        login();
     }
 }
