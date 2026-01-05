@@ -20,20 +20,22 @@ export async function syncEntity(entityName, token) {
         try {
             const remoteItem = await downloadFile(file.id, token);
             delete remoteItem.id;
+
+            if (!localItem && remoteItem.deleted === 1) continue;
             if (!localItem) {
-                if (remoteItem.deleted !== 1) {
-                    await db[entityName].add({...remoteItem, synced: 1});
-                    pulled++;
-                } else {
-                    if (new Date(remoteItem.modifiedAt) > new Date(localItem.modifiedAt)) {
-                        if (remoteItem.deleted === 1) {
-                            await db[entityName].where('uuid').equals(uuid).delete();
-                        } else {
-                            await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
-                            pulled++;
-                        }
-                    }
-                }
+                await db[entityName].add({...remoteItem, synced: 1});
+                pulled++;
+                continue;
+            }
+            if (localItem && remoteItem.deleted ===1) {
+                await db[entityName].where('uuid').equals(uuid).delete();
+                pulled++;
+                continue;
+            }
+            if (new Date(remoteItem.modifiedAt) > new Date(localItem.modifiedAt)) {
+                await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
+                pulled++;
+                continue;
             }
         } catch (err) {
             console.log(`Failed to download file ${file.name}: `, err);
