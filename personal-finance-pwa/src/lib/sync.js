@@ -14,24 +14,30 @@ export async function syncEntity(entityName, token) {
     const driveFiles = await listDriveFiles(entityName, token);
     let pulled = 0;
     for (const file of driveFiles) {
-        const uuid = file.name.replace(".json", "");
-        const remoteItem = await downloadFile(file.id, token);
-        delete remoteItem.id;
 
+        const uuid = file.name.replace(`${entityName}-`, "").replace(".json", "");
         const localItem = await db[entityName].where('uuid').equals(uuid).first();
-
-        if (!localItem) {
-            if (remoteItem.deleted !== 1) {
-                await db[entityName].add({...remoteItem, synced: 1});
-                pulled++;
-            } else if (new Date(remoteItem.modifiedAt) > new Date(localItem.modifiedAt)) {
-                if (remoteItem.deleted === 1) {
-                    await db[entityName].where('uuid').equals(uuid).delete();
-                } else {
-                    await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
+        try {
+            const remoteItem = await downloadFile(file.id, token);
+            delete remoteItem.id;
+            if (!localItem) {
+                if (remoteItem.deleted !== 1) {
+                    await db[entityName].add({...remoteItem, synced: 1});
                     pulled++;
+                } else {
+                    if (new Date(remoteItem.modifiedAt) > new Date(localItem.modifiedAt)) {
+                        if (remoteItem.deleted === 1) {
+                            await db[entityName].where('uuid').equals(uuid).delete();
+                        } else {
+                            await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
+                            pulled++;
+                        }
+                    }
                 }
             }
+        } catch (err) {
+            console.log(`Failed to download file ${file.name}: `, err);
+            continue;
         }
     }
     return { pushed, pulled };

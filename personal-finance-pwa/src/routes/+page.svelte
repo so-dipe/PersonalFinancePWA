@@ -57,19 +57,37 @@
         <button on:click={handleSave}>Submit</button>
     </div>
 
-    <div class="list">
-        {#if $recentTransactions}
-            {#each $recentTransactions as tx}
-                <div class="item">
-                    <span>{tx.date}</span>
-                    <span>{tx.amount.toFixed(2)}</span>
-                    <small>{tx.synced ? '✅' : '☁️'}</small>
-                </div>
-            {/each}
-        {:else}
-            <p>Loading Recent Transactions...</p>
-        {/if}
-    </div>
+    <table class="transactions-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {#if $recentTransactions && $recentTransactions.length > 0}
+                {#each $recentTransactions as tx}
+                    <tr>
+                        <td>{tx.date}</td>
+                        <td>{tx.description}</td>
+                        <td>{tx.category}</td>
+                        <td>{tx.amount.toFixed(2)}</td>
+                        <td>{tx.type}</td>
+                        <td>{tx.synced ? '✅' : '☁️'}</td>
+                    </tr>
+                {/each}
+            {:else}
+                <tr>
+                    <td colspan="6" style="text-align:center;">Loading Recent Transactions...</td>
+                </tr>
+            {/if}
+        </tbody>
+    </table>
+
 </div>
 
 <style>
