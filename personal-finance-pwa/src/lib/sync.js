@@ -1,12 +1,12 @@
-import { ensureValidToken, uploadFile, login, downloadFile } from "./drive";
+import { ensureValidToken, uploadFile, login, downloadFile, listDriveFiles } from "./drive";
 import { db } from "./db";
 
 export async function syncEntity(entityName, token) {
-    
+
     const unsynced = await db[entityName].where('synced').equals(0).toArray();
     let pushed = 0;
     for (const item of unsynced) {
-        await uploadFile(entityName, `${item.uuid}.json`, item, token);
+        await uploadFile(`${entityName}-${item.uuid}.json`, item, token);
         await db[entityName].update(item.id, { synced: 1});
         pushed++;
     }
@@ -53,7 +53,7 @@ export async function syncAll() {
     try {
         const token = await ensureValidToken();
         if (!token) {
-            login();
+            console.log('No valid token, cannot sync');
             return;
         }
         const results = {};
@@ -62,6 +62,7 @@ export async function syncAll() {
         }
         return results;
     } catch (err) {
+        console.log('Sync all failed, need to reauthenticate', err);
         login();
     }
 }

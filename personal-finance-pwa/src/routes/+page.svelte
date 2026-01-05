@@ -1,11 +1,12 @@
 <script>
-    import { onMount} from 'svelte';
+    import { onMount } from 'svelte';
     import { db, addTransaction } from '$lib/db';
     import { liveQuery } from 'dexie';
-    import { ensureValidToken, googleToken, initGoogleAuth, login } from '$lib/drive';
+    import { ensureValidToken, googleToken, initGoogleAuth, loadGoogleApi, login } from '$lib/drive';
     import { microTaskSyncEntity, syncAll } from '$lib/sync';
 
     onMount(async () => {
+        await loadGoogleApi();
         initGoogleAuth();
         try {
             await syncAll()

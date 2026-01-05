@@ -12,8 +12,24 @@ let tokenClient;
 let pendingResolve;
 let pendingReject;
 
-export function initGoogleAuth() {
+let googleApiLoaded = false;
 
+export function loadGoogleApi() {
+    return new Promise((resolve) => {
+        if (googleApiLoaded) return resolve();
+
+        window.gapi.load('client', async () => {
+            await window.gapi.client.init({
+                apiKey: '',
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+            });
+            googleApiLoaded = true;
+            resolve();
+        });
+    });
+}
+
+export function initGoogleAuth() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
@@ -29,15 +45,17 @@ export function initGoogleAuth() {
     }
 }
 
-function requestToken(prompt = '') {
+function requestNewToken(prompt = '') {
     return new Promise((resolve, reject) => {
         pendingResolve = resolve;
         pendingReject = reject;
+        console.log('Requesting new token with prompt:', prompt);
         tokenClient.requestAccessToken({prompt});
     });
 }
 
 function handleTokenResponse(response) {
+    console.log('Token response:', response);
     if (response.error) {
         googleToken.set(null);
         pendingReject?.(response.error);
@@ -65,7 +83,7 @@ export async function ensureValidToken() {
         return Promise.resolve(token);
     }
 
-    return requestToken();        
+    return requestNewToken();        
 }
 
 export function login() {
@@ -73,12 +91,10 @@ export function login() {
     tokenClient.requestAccessToken({prompt: 'consent'});
 }
 
-export async function uploadFile(entityName, filename, data, token) {
-    const folderId = await ensureFolder(entityName, token);
-
+export async function uploadFile(filename, data, token) {
     const metadata = {
         name: filename,
-        parents: [folderId]
+        parents: ['appDataFolder'],
     };
 
     const formData = new FormData();
@@ -96,13 +112,17 @@ export async function uploadFile(entityName, filename, data, token) {
 }
 
 export async function listDriveFiles(entityName, token) {
-    const folderId = await ensureFolder(entityName, token);
+    const q = `name contains '${entityName}-' and 'appDataFolder' in parents and trashed=false`;
+
     const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id, name)`,
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id, name)`,
         { headers: {Authorization: `Bearer ${token}`}}
     );
+    if (!response.ok) throw new Error("List Files Failed");
+
     const data = await response.json()
-    return data.files || [];
+
+    return data?.files;
 }
 
 export async function downloadFile(fileID, token) {
@@ -113,41 +133,51 @@ export async function downloadFile(fileID, token) {
     return await response.json()
 }
 
-async function ensureFolder(name, token) {
-    const q = `name='${name}'+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false+and+'appDataFolder'+in+parents`;
-    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+// async function ensureFolder(name, token) {
+//     const q = `name='${name}' and mimeType = 'application/vnd.google-apps.folder' and trashed=false and 'appDataFolder' in parents`;
+//     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name)`;
+//     const res = await gapi.client.drive.files.list({q: q, spaces: 'appDataFolder', fields: 'files(id,name)'});
+    
+//     //fetch(url, { headers: { Authorization: `Bearer ${token}` } });
 
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Drive list folders failed: ${res.status} ${res.statusText} - ${text}`);
-    }
+//     if (!res.ok) {
+//         const text = await res.text();
+//         throw new Error(`Drive list folders failed: ${res.status} ${res.statusText} - ${text}`);
+//     }
 
-    const data = await res.json();
+//     // const data = await res.json();
+//     const files = res.result.files;
 
-    if (Array.isArray(data.files) && data.files.length) return data.files[0].id;
+//     if (files && files.length) return files[0].id;
 
-    const metadata = {
-        name: name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: ['appDataFolder']
-    };
+//     // if (Array.isArray(data.files) && data.files.length) return data.files[0].id;
 
-    const createRes = await fetch(
-        'https://www.googleapis.com/drive/v3/files',
-        {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(metadata)
-        }
-    );
+//     const metadata = {
+//         name: name,
+//         mimeType: 'application/vnd.google-apps.folder',
+//         parents: ['appDataFolder']
+//     };
 
-    if (!createRes.ok) {
-        const text = await createRes.text();
-        throw new Error(`Drive create folder failed: ${createRes.status} ${createRes.statusText} - ${text}`);
-    }
+//     const createRes = await gapi.client.drive.files.create({
+//         resource: metadata,
+//         fields: 'id, name'
+//     });
+    
+//     // await fetch(
+//     //     'https://www.googleapis.com/drive/v3/files',
+//     //     {
+//     //         method: 'POST',
+//     //         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+//     //         body: JSON.stringify(metadata)
+//     //     }
+//     // );
 
-    const folder = await createRes.json();
-    console.log('Created Drive folder:', folder);
-    return folder.id;
-}
+//     if (!createRes.ok) {
+//         const text = await createRes.text();
+//         throw new Error(`Drive create folder failed: ${createRes.status} ${createRes.statusText} - ${text}`);
+//     }
+
+//     // const folder = await createRes.json();
+//     console.log('Created Drive folder:', createRes.result);
+//     return createRes.result.id;
+// }
