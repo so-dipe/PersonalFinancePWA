@@ -3,13 +3,12 @@
     import { db, addTransaction } from '$lib/db';
     import { liveQuery } from 'dexie';
     import { ensureValidToken, googleToken, initGoogleAuth, login } from '$lib/drive';
-    import { handleSync, microTaskSyncing } from '$lib/sync';
+    import { microTaskSyncEntity, syncAll } from '$lib/sync';
 
     onMount(async () => {
         initGoogleAuth();
-
         try {
-            await handleSync()
+            await syncAll()
         } catch (err) {
             console.log("Silent Login or Syncing unavailable", err)
         }
@@ -33,13 +32,13 @@
     async function handleSave() {
         if (!date || !transactionType || !description || !amount || !category) return;
         await addTransaction(date, transactionType, description, amount, category);
-        await microTaskSyncing();
+        await microTaskSyncEntity('transactions');
     }
 </script>
 
 <div>
     <h1>Income & Expenses</h1>
-    <button on:click={handleSync}>
+    <button on:click={syncAll}>
         {$googleToken ? 'Sync to Google Drive': 'Login to Sync to Google Drive'}
     </button>
     <div class="card">
