@@ -14,8 +14,10 @@ export async function syncEntity(entityName, token) {
     const driveFiles = await listDriveFiles(entityName, token);
     let pulled = 0;
     for (const file of driveFiles) {
+        const uuid = file.name.replace(".json", "");
+        const remoteItem = await downloadFile(file.id, token);
+        delete remoteItem.id;
 
-        const uuid = file.name.replace(`${entityName}-`, "").replace(".json", "");
         const localItem = await db[entityName].where('uuid').equals(uuid).first();
         try {
             const remoteItem = await downloadFile(file.id, token);

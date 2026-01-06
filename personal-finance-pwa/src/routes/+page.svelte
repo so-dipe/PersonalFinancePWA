@@ -87,7 +87,6 @@
             {/if}
         </tbody>
     </table>
-
 </div>
 
 <style>
