@@ -1,24 +1,26 @@
-import { ensureValidToken, uploadFile, login, downloadFile, listDriveFiles } from "./drive";
+import { ensureValidToken, uploadFile, login, downloadFile, listDriveFiles } from "./google";
 import { db } from "./db";
 
 export async function syncEntity(entityName, token) {
 
     const unsynced = await db[entityName].where('synced').equals(0).toArray();
+
     let pushed = 0;
+
     for (const item of unsynced) {
         await uploadFile(`${entityName}-${item.uuid}.json`, item, token);
-        await db[entityName].update(item.id, { synced: 1});
+        await db[entityName].update(item.id, { synced: 1, modifiedAt: new Date().toISOString() });
         pushed++;
     }
 
     const driveFiles = await listDriveFiles(entityName, token);
-    let pulled = 0;
-    for (const file of driveFiles) {
-        const uuid = file.name.replace(".json", "");
-        const remoteItem = await downloadFile(file.id, token);
-        delete remoteItem.id;
 
+    let pulled = 0;
+    
+    for (const file of driveFiles) {
+        const uuid = file.name.replace(`${entityName}-`, "").replace(".json", "");
         const localItem = await db[entityName].where('uuid').equals(uuid).first();
+
         try {
             const remoteItem = await downloadFile(file.id, token);
             delete remoteItem.id;

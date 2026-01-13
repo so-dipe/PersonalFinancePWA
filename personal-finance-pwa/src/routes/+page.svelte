@@ -2,10 +2,18 @@
     import { onMount } from 'svelte';
     import { db, addTransaction } from '$lib/db';
     import { liveQuery } from 'dexie';
-    import { ensureValidToken, googleToken, initGoogleAuth, loadGoogleApi, login } from '$lib/drive';
+    import { googleToken, initGoogleAuth, loadGoogleApi } from '$lib/google';
     import { microTaskSyncEntity, syncAll } from '$lib/sync';
+    import TransactionForm from '$lib/components/TransactionForm.svelte';
+    import Transactions from '$lib/components/Transactions.svelte';
 
-    onMount(async () => {
+    let openSection = 'form';
+
+    function toggle(section) {
+        openSection = openSection === section ? null : section;
+    }
+
+    async function bootstrapApp() {
         await loadGoogleApi();
         initGoogleAuth();
         try {
@@ -13,86 +21,35 @@
         } catch (err) {
             console.log("Silent Login or Syncing unavailable", err)
         }
-    })
-
-    let date = new Date().toISOString().slice(0, 10);
-    let transactionType = "";
-    let description = "";
-    let amount = "";
-    let category = "";
-
-    const recentTransactions = liveQuery(() => 
-        db.transactions
-            .orderBy('createdAt')
-            .reverse()
-            .filter(tx => tx.deleted === 0)
-            .limit(100)
-            .toArray()
-    );
-
-    async function handleSave() {
-        if (!date || !transactionType || !description || !amount || !category) return;
-        await addTransaction(date, transactionType, description, amount, category);
-        await microTaskSyncEntity('transactions');
     }
+
+    onMount(bootstrapApp);
 </script>
 
-<div>
-    <h1>Income & Expenses</h1>
-    <button on:click={syncAll}>
-        {$googleToken ? 'Sync to Google Drive': 'Login to Sync to Google Drive'}
-    </button>
-    <div class="card">
-        <input type="date" bind:value={date}>
-        <select bind:value={transactionType}>
-            <option>Income (+)</option>
-            <option>Expense (-)</option>
-        </select>
-        <input type="text" bind:value={description}>
-        <input type="number" bind:value={amount}>
-        <select bind:value={category}>
-            <option>Food</option>
-            <option>Transportation</option>
-        </select>
-        <button on:click={handleSave}>Submit</button>
+<div class="page">
+    <div class="page-grid">
+        <div class="card">
+            <TransactionForm />
+        </div>
+        <div class="mt-lg">
+            <Transactions />
+        </div>
     </div>
-
-    <table class="transactions-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Type</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {#if $recentTransactions && $recentTransactions.length > 0}
-                {#each $recentTransactions as tx}
-                    <tr>
-                        <td>{tx.date}</td>
-                        <td>{tx.description}</td>
-                        <td>{tx.category}</td>
-                        <td>{tx.amount.toFixed(2)}</td>
-                        <td>{tx.type}</td>
-                        <td>{tx.synced ? '✅' : '☁️'}</td>
-                    </tr>
-                {/each}
-            {:else}
-                <tr>
-                    <td colspan="6" style="text-align:center;">Loading Recent Transactions...</td>
-                </tr>
-            {/if}
-        </tbody>
-    </table>
 </div>
 
 <style>
-	.container { max-width: 400px; margin: 0 auto; padding: 20px; font-family: sans-serif; }
-	.card { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-	input, button { padding: 12px; border-radius: 8px; border: 1px solid #ccc; }
-	button { background: #ff3e00; color: white; border: none; font-weight: bold; }
-	.item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+    .page {
+        padding: var(--space-lg);
+    }
+
+    .page-grid {
+        display: grid;
+        gap: var(--space-lg);
+    }
+
+    @media (min-width: 768px) {
+        .page-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>

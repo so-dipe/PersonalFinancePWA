@@ -1,5 +1,246 @@
-/* Global styles — Tailwind removed */
-html, body {
-  margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+/* ===============================
+   Base Reset
+================================ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+
+button,
+input,
+select {
+    font-family: inherit;
+}
+
+
+/* ===============================
+   Design Tokens
+================================ */
+
+:root {
+    /* Greens */
+    --green-900: #0f3d2e;
+    --green-700: #1f7a4f;
+    --green-500: #2fbf71;
+    --green-100: #e8f5ee;
+
+    /* Grays */
+    --gray-900: #1f2937;
+    --gray-700: #374151;
+    --gray-400: #9ca3af;
+    --gray-200: #e5e7eb;
+
+    /*Reds */
+    --red-700: #b91c1c;
+    --red-500: #ef4444;
+    --red-100: #fee2e2;
+
+    /* Text */
+    --text-main: var(--gray-900);
+    --text-muted: var(--gray-400);
+
+    /* Backgrounds */
+    --bg-main: #f9fafb;
+    --bg-card: #ffffff;
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    /* Shadow */
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   Global Elements
+================================ */
+
+h1,
+h2,
+h3 {
+    color: var(--green-900);
+    margin-top: 0;
+}
+
+h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+a {
+    color: var(--green-700);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+input,
+select {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--green-700);
+    box-shadow: 0 0 0 3px var(--green-100);
+}
+
+/* ===============================
+   Layout Utilities
+================================ */
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.mt-sm {
+    margin-top: var(--space-sm);
+}
+
+.mt-md {
+    margin-top: var(--space-md);
+}
+
+.mt-lg {
+    margin-top: var(--space-lg);
+}
+
+/* ===============================
+   Helpers
+================================ */
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ===============================
+   Dark Mode
+================================ */
+
+[data-theme="dark"] {
+    --bg-main: #0f172a;
+    --bg-card: #020617;
+
+    --text-main: #e5e7eb;
+    --text-muted: #94a3b8;
+
+    --gray-200: #1e293b;
+    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+
+
+/* ===============================
+   Components
+================================ */
+
+.card {
+    padding: var(--space-lg);
+}
+
+.button-primary {
+    background: linear-gradient(
+        135deg,
+        var(--green-700),
+        var(--green-500)
+    );
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button-primary:hover {
+    background: var(--green-700);
+}
+
+
+/*===========================
+    Table
+============================*/
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+/* Headings */
+thead th {
+    color: var(--green-900);
+    font-weight: 700;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+/* Body cells */
+tbody td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+tbody tr:hover {
+    background-color: var(--green-100);
+    transition: background 0.2s ease;
+}
+
+@media (max-width: 640px) {
+    table {
+        display: block;
+        overflow-x: auto;
+    }
 }

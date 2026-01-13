@@ -6,7 +6,10 @@ export const googleToken = writable(null);
 
 const CLIENT_ID = '1088000417078-7kdb0m71l7hod2jmjlh5tnksj3kr6f46.apps.googleusercontent.com';
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const SCOPES = [
+    'https://www.googleapis.com/auth/drive.appdata',
+    'https://www.googleapis.com/auth/gmail.readonly'
+].join(' ');
 
 let tokenClient;
 let pendingResolve;
@@ -21,7 +24,10 @@ export function loadGoogleApi() {
         window.gapi.load('client', async () => {
             await window.gapi.client.init({
                 apiKey: '',
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                discoveryDocs: [
+                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+                    'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'
+                ]
             });
             googleApiLoaded = true;
             resolve();
@@ -136,6 +142,39 @@ export async function downloadFile(fileID, token) {
     const response = await gapi.client.drive.files.get({
         fileId: fileID,
         alt: 'media'
+    });
+
+    return response.result;
+}
+
+export async function listTransactionEmails(query, token) {
+    gapi.client.setToken({access_token: token});
+    const response = await gapi.client.gmail.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: 100
+    });
+
+    return response.result?.messages || [];
+}
+
+export function constructEmailQuery(from='', subject='', afterDate='') {
+    let query = '';
+    if (from) query += `from:${from} `;
+    if (subject) query += `subject:(${subject}) `;
+    if (afterDate) {
+        const timestamp = Math.floor(new Date(afterDate).getTime() / 1000);
+        query += `after:${timestamp} `;
+    }
+    return query.trim();
+}
+
+export async function getEmailContent(messageId, token) {
+    gapi.client.setToken({access_token: token});
+    const response = await gapi.client.gmail.users.messages.get({
+        userId: 'me',
+        id: messageId,
+        format: 'full'
     });
 
     return response.result;
