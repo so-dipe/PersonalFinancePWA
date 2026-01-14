@@ -238,9 +238,9 @@ tbody tr:hover {
     transition: background 0.2s ease;
 }
 
-@media (max-width: 640px) {
+/* @media (max-width: 640px) {
     table {
         display: block;
         overflow-x: auto;
     }
-}
+} */

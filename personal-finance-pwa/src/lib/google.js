@@ -98,18 +98,16 @@ export function login() {
 }
 
 export async function uploadFile(filename, data, token) {
-    const fileData = {
-        u: data.uuid,
-        m: data.modifiedAt,
-        c: data.createdAt,
-        s: data.synced ? 1 : 0,
-        d: data.deleted ? 1 : 0
-    }
-
     const metadata = {
         name: filename,
-        parents: ['appDataFolder']
-        // appProperties: { fileData: JSON.stringify(fileData) }
+        parents: ['appDataFolder'],
+        appProperties: {
+            u: data.uuid,
+            m: data.modifiedAt,
+            c: data.createdAt,
+            s: data.synced ? 1 : 0,
+            d: data.deleted ? 1 : 0
+        }
     };
 
     const formData = new FormData();
@@ -131,7 +129,7 @@ export async function listDriveFiles(entityName, token) {
     const response = await gapi.client.drive.files.list({
         spaces: 'appDataFolder',
         q: `name contains '${entityName}-'`,
-        fields: `files(id, name)`
+        fields: `files(id,name,appProperties)`
     });
 
     return response.result?.files;
@@ -146,6 +144,8 @@ export async function downloadFile(fileID, token) {
 
     return response.result;
 }
+
+//GMAIL FUNCTIONS
 
 export async function listTransactionEmails(query, token) {
     gapi.client.setToken({access_token: token});

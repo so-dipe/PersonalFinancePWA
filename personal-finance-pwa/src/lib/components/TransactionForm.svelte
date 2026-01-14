@@ -1,8 +1,8 @@
 <script>
     import { addTransaction, db, loadDefaultCategories } from "$lib/db";
     import { microTaskSyncEntity } from "$lib/sync";
-    import QuickActions from "$lib/components/QuickActions.svelte";
-    import ImportTransactionFromEmail from "$lib/components/ImportTransactionFromEmail.svelte";
+    import QuickActions from "./QuickActions.svelte";
+    import ImportTransactionFromEmail from "./ImportTransactionFromEmail.svelte";
     import ImportTransactionFromCSV from "./ImportTransactionFromCSV.svelte";
 
     let form = {
@@ -34,22 +34,21 @@
     }
 
     let categories = [];
+    let filteredCategories = [];
 
-    db.categories.toArray().then((cats) => {
+    db.categories.where('deleted').equals(0).toArray().then((cats) => {
         if (cats.length === 0) {
-            loadDefaultCategories().then(() => {
-                db.categories.toArray().then((newCats) => {
-                    categories = newCats.map(c => c.name);
-                });
+            loadDefaultCategories().then(async () => {
+                categories = await db.categories.toArray();
             });
         } else {
-            categories = cats.map(c => c.name);
+            categories = cats;
         }
     });
 
     async function submit() {
         const { date, transactionType, description, amount, category } = form;
-        await addTransaction(date, transactionType, description, amount, category);
+        await addTransaction(form);
         await microTaskSyncEntity('transactions');
 
         form = {
@@ -60,6 +59,8 @@
             category: ""
         };
     }
+
+    $: filteredCategories = form.transactionType ? categories.filter(c => c.transactionType === form.transactionType) : [];
 </script>
 
 <div class="card">
@@ -79,8 +80,8 @@
 
         <select bind:value={form.category} class:prefilled={prefilled.category} required>
             <option value="" disabled selected>Select category</option>
-            {#each categories as category}
-                <option>{category}</option>
+            {#each filteredCategories as category}
+                <option>{category.name}</option>
             {/each}
         </select>
         
@@ -93,7 +94,7 @@
         <QuickActions on:prefill={(e) => prefillForm(e.detail)}/>
     </div>
 
-    <div class="mt-md">
+    <div class="card import-container">
         <p class="text-muted mt-md">Import</p>
         <ImportTransactionFromEmail />
         <ImportTransactionFromCSV />
@@ -107,5 +108,11 @@
         transition:
             background-color 0.6s ease,
             border-color 0.6s ease;
+    }
+
+    .import-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
     }
 </style>

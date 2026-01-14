@@ -1,36 +1,59 @@
 <script>
+    import { addTransaction, isDuplicateTransaction } from '$lib/db';
+    import { runImportPipeline } from '$lib/import/pipeline';
     import { excelDateToJSDate } from '$lib/utils';
     import { json } from '@sveltejs/kit';
     import * as XLSX from 'xlsx';
+    import Accordion from './Accordion.svelte';
+    import ImportDialog from './ImportDialog.svelte';
 
     let file;
     let transactions = [];
-
-    let dialog;
-
-    let cardVisible = false;
-
     let hasHeader = false;
+    
+    let showDialog = false;
+    let loading = false;
 
-    function toggleCard() {
-        if (cardVisible) {
-            dialog.close();
-        } else {
-            dialog.showModal();
-        }
-        cardVisible = !cardVisible;
+    async function ImportCSV(rows) {
+        const raw = rows.map(r => ({
+            date: r[0],
+            transactionType: r[1],
+            description: r[2],
+            amount: r[3],
+            category: r[4],
+            source: 'csv/excel'
+        }))
+
+        transactions = await runImportPipeline(raw);
+        showDialog = true;
     }
 
     function handleFileChange(event) {
         file = event.target.files[0];
     }
 
-    function importFiles() {
+    async function importCSV(rows) {
+        const raw = rows
+            .filter(r => r.length >= 4)
+            .map(r => ({
+                date: excelDateToJSDate(r[0]),
+                transactionType: r[1] ?? 'expense',
+                description: r[2],
+                amount: r[3],
+                category: r[4],
+                source: 'csv/excel'
+            }));
+        
+        transactions = await runImportPipeline(raw);
+        showDialog = true;
+    }
+
+    function importFile() {
         if (!file) return;
 
         const reader = new FileReader();
 
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             const sheetName = workbook.SheetNames[0];
@@ -38,100 +61,52 @@
 
             const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
             const rows = hasHeader ? jsonData.slice(1): jsonData;
-            transactions = rows
-                .filter(row => row.length)
-                .map(row => ({
-                    date: excelDateToJSDate(row[0]),
-                    transactionType: row[1],
-                    description: row[2],
-                    amount: row[3],
-                    category: row[4]
-                }))
+            loading = true;
+            await importCSV(rows);
+            loading = false;
         }
         reader.readAsArrayBuffer(file);
     }
+
+    function commitImport() {
+        console.log("Ready to commit!")
+    }
 </script>
-<button on:click={toggleCard}>Load Transactions from a CSV/Excel file</button>
-<dialog bind:this={dialog}>
-    <div class="import-container">
-        <div class="import-instructions">
-            <h4>Before importing your file</h4>
-            <ul>
-                <li>Ensure your data is in the <strong>first sheet</strong> of the file</li>
-                <li>Columns must be in this order:</li>
-                <li class="format">
-                    Date | Transaction Type | Description | Amount | Description
-                </li>
-                <li>Check "First row is header" if applicable</li>
-            </ul>
-        </div>
-        <div class="import-form">
-            <label class="file-input">
-                <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} />
-            </label>
 
-            <label class="checkbox">
-                <input type="checkbox" id="hasHeader" bind:checked={hasHeader} disabled={!file}/>
-                <span>First row is header</span>
-            </label>
-
-        </div>
-        <div class="actions">
-            <button class="primary" on:click={importFiles}>Import</button>
-        </div>
-
-        {#if transactions.length > 0}
-            <h4>Imported Transactions:</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Category</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each transactions as tx}
-                        <tr>
-                            <td>{tx.date}</td>
-                            <td>{tx.transactionType}</td>
-                            <td>{tx.description}</td>
-                            <td>{tx.amount}</td>
-                            <td>{tx.category}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {/if}
-        <button on:click={toggleCard}>Close</button>
+<Accordion title="Import from CSV/Excel">
+    <div class="import-instructions">
+        <h4>Before importing your file</h4>
+        <ul>
+            <li>Ensure your data is in the <strong>first sheet</strong> of the file</li>
+            <li>Columns must be in this order:</li>
+            <li class="format">
+                Date | Transaction Type | Description | Amount | Description
+            </li>
+            <li>Check "First row is header" if applicable</li>
+        </ul>
     </div>
-</dialog>
+    <div class="upload-form">
+        <label class="file-input">
+            <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} />
+        </label>
+        <label class="checkbox">
+            <input type="checkbox" id="hasHeader" bind:checked={hasHeader} disabled={!file}/>
+            <span>First row is header</span>
+        </label>
+        <button class="primary" on:click={importFile} disabled={loading}>
+            {loading ? 'Loading...': 'Load Transactions'}
+        </button>
+    </div>
+</Accordion>
+{#if showDialog}
+    <ImportDialog
+        {transactions}
+        onClose={() => (showDialog = false)}
+        onCommit={commitImport}
+    />
+{/if}
 
-<style>
-    dialog {
-        border: none;
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-md);
-        background: var(--bg-card);
-        color: var(--text-main);
-        padding: 0;
-        max-width: 640px;
-        width: 100%;
-    }
-    
-    dialog::backdrop {
-        background: rgba(0, 0, 0, 0.5);
-    }
-    
-    .import-container {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-md);
-        padding: var(--space-lg);
-    }
-    
+<style>    
     /* Instructions */
     .import-instructions {
         background: var(--bg-main);
@@ -166,7 +141,7 @@
     }
     
     /* Form */
-    .import-form {
+    .upload-form {
         display: flex;
         flex-direction: column;
         gap: var(--space-sm);
@@ -184,16 +159,21 @@
         background: var(--bg-main);
     }
 
+    .file-input input {
+        width: 100%;
+    }
+
     .checkbox {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         font-size: 0.85rem;
     }
 
     .actions {
         display: flex;
-        justify-content: flex-center;
+        justify-content: center;
         gap: var(--space-sm);
         margin-top: var(--space-sm);
     }

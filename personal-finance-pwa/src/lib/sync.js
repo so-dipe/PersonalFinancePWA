@@ -22,21 +22,33 @@ export async function syncEntity(entityName, token) {
         const localItem = await db[entityName].where('uuid').equals(uuid).first();
 
         try {
-            const remoteItem = await downloadFile(file.id, token);
-            delete remoteItem.id;
+            const remoteItemProperties = {
+                uuid: file.appProperties.u,
+                modifiedAt: file.appProperties.m,
+                createdAt: file.appProperties.c,
+                synced: file.appProperties.s,
+                deleted: file.appProperties.d
+            }
+            const remoteModified = new Date(remoteItemProperties.modifiedAt)
+            const localModified = new Date(localItem.modifiedAt)
 
-            if (!localItem && remoteItem.deleted === 1) continue;
+            if (!localItem && remoteItemProperties.deleted === 1) continue;
+            if (remoteModified <= localModified) continue;
             if (!localItem) {
+                const remoteItem = await downloadFile(file.id, token);
+                delete remoteItem.id;
                 await db[entityName].add({...remoteItem, synced: 1});
                 pulled++;
                 continue;
             }
-            if (localItem && remoteItem.deleted ===1) {
+            if (localItem && remoteItemProperties.deleted ===1) {
                 await db[entityName].where('uuid').equals(uuid).delete();
                 pulled++;
                 continue;
             }
-            if (new Date(remoteItem.modifiedAt) > new Date(localItem.modifiedAt)) {
+            if (new Date(remoteItemProperties.modifiedAt) > new Date(localItem.modifiedAt)) {
+                const remoteItem = await downloadFile(file.id, token);
+                delete remoteItem.id;
                 await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
                 pulled++;
                 continue;
@@ -50,15 +62,18 @@ export async function syncEntity(entityName, token) {
 }
 
 export function microTaskSyncEntity(entityName) {
+    let pushed = 0;
+    let pulled = 0;
     queueMicrotask(async() => {
         try {
             const token = await ensureValidToken();
             if (!token) return;
-            await syncEntity(entityName, token);
+            pushed, pulled = await syncEntity(entityName, token);
         } catch (err) {
             console.log(`Sync deferred for ${entityName}`);
         }
     });
+    return pushed, pulled
 }
 
 export async function syncAll() {
