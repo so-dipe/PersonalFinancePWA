@@ -5,7 +5,9 @@ export const defaultSettings = {
 
     sync: {
         enabled: false,
-        autoSync: false
+        autoSync: false,
+        lastSynced: null,
+        status: 'idle'
     },
 
     display: {

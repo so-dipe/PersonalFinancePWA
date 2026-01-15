@@ -7,6 +7,22 @@ export function formatDate(dateStr) {
     });
 }
 
+export function formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+
+    const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+    };
+
+    return date.toLocaleString("en-GB", options);
+}
+
 export function formatFinancial(amount, isNegative = false) {
     const formatted = amount.toLocaleString("en-NG", {
         style: "decimal",

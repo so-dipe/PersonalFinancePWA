@@ -3,7 +3,9 @@
     import { readable } from "svelte/store";
     import { liveQuery } from "dexie";
     import { db } from "$lib/db";
-    import { formatDate, formatFinancial } from "$lib/utils";
+    import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
+    import { settings } from "$lib/settings/store";
+    import { syncAll } from "$lib/sync/sync";
 
     let recentTransactions;
 
@@ -23,10 +25,23 @@
             return () => sub.unsubscribe();
         })
     });
+
+    function manualSync() {
+        syncAll();
+    }
 </script>
 
 <div class="card">
-    <h3>Transactions</h3>
+    <h3>
+        Transactions
+        {#if $settings.sync?.enabled}
+        <small>
+            (<a class="sync-status" on:click={manualSync}>
+                synced: {formatDateTime(new Date($settings.sync?.lastSynced))}
+            </a>)
+        </small>
+        {/if}
+    </h3>
     <table>
         <thead>
             <tr>

@@ -82,6 +82,7 @@ export async function getCachedToken(scopeKey) {
     if (token && expiry && Date.now() < parseInt(expiry) - 60_000) {
         if (scopeKey === 'DRIVE') driveToken.set(token);
         if (scopeKey === 'GMAIL') gmailToken.set(token);
+        return token;
     }
     return null;
 }
