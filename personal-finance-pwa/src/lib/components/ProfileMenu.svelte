@@ -1,5 +1,6 @@
 <script>
     import { goto } from "$app/navigation";
+    import { settings } from "$lib/settings/store";
     export let sidebarOpen = false;
 
     function toggleSidebar() {
@@ -9,8 +10,8 @@
 
 
 <div class="nav card">
-    <button class="profile-btn" on:click={() => goto('/')} aria-label="Account">
-        <img src="/avatar.png" alt="Profile" class="avatar">
+    <button class="profile-btn" on:click={() => goto('/account')} aria-label="Account">
+        <img src={$settings.account?.picture} alt="Profile" class="avatar">
     </button>
 
 

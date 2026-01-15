@@ -1,11 +1,10 @@
 <script>
     import { onMount } from 'svelte';
-    import { db, addTransaction } from '$lib/db';
-    import { liveQuery } from 'dexie';
-    import { googleToken, initGoogleAuth, loadGoogleApi } from '$lib/google';
-    import { microTaskSyncEntity, syncAll } from '$lib/sync';
+    import { loadGoogleApi } from '$lib/google';
+    import { syncAll } from '$lib/sync/sync';
     import TransactionForm from '$lib/components/TransactionForm.svelte';
     import Transactions from '$lib/components/Transactions.svelte';
+    import { loadSettings } from '$lib/settings/store';
 
     let openSection = 'form';
 
@@ -14,12 +13,15 @@
     }
 
     async function bootstrapApp() {
+        const loadedSettings = await loadSettings();
         await loadGoogleApi();
-        initGoogleAuth();
-        try {
-            await syncAll()
-        } catch (err) {
-            console.log("Silent Login or Syncing unavailable", err)
+
+        if (!loadedSettings.sync.enabled) return;
+
+        await loadGoogleApi();
+
+        if (loadedSettings.sync.autoSync) {
+            await syncAll();
         }
     }
 

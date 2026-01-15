@@ -1,9 +1,11 @@
 <script>
     import { addTransaction, db, loadDefaultCategories } from "$lib/db";
-    import { microTaskSyncEntity } from "$lib/sync";
+    import { microTaskSyncEntity } from "$lib/sync/sync";
     import QuickActions from "./QuickActions.svelte";
     import ImportTransactionFromEmail from "./ImportTransactionFromEmail.svelte";
     import ImportTransactionFromCSV from "./ImportTransactionFromCSV.svelte";
+    import { settings } from "$lib/settings/store";
+    import { get } from "svelte/store"
 
     let form = {
         date: new Date().toISOString().slice(0, 10),
@@ -47,9 +49,12 @@
     });
 
     async function submit() {
-        const { date, transactionType, description, amount, category } = form;
         await addTransaction(form);
-        await microTaskSyncEntity('transactions');
+        
+        const currentSettings = get(settings);
+        if (currentSettings.sync.autoSync) {
+            await microTaskSyncEntity('transactions');
+        }
 
         form = {
             date: new Date().toISOString().slice(0, 10),

@@ -2,7 +2,7 @@
     import { addTransaction, getFrequentTransactions } from '$lib/db';
     import { onMount, createEventDispatcher } from 'svelte';
     import { formatAmount } from '$lib/utils';
-    import { microTaskSyncEntity } from '$lib/sync';
+    // import { microTaskSyncEntity } from '$lib/sync';
 
     const dispatch = createEventDispatcher();
 
@@ -15,8 +15,8 @@
         const amount = tx.amount;
         const category = tx.category;
 
-        await addTransaction(date, transactionType, description, amount, category);
-        await microTaskSyncEntity('transactions');
+        // await addTransaction(date, transactionType, description, amount, category);
+        // await microTaskSyncEntity('transactions');
     }
     
     onMount(async () => {

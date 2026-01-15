@@ -2,16 +2,11 @@ import Dexie, { liveQuery } from "dexie";
 
 export const db = new Dexie("FinanceDB")
 
-// db.version(1).stores({
-//     transactions: '++id, uuid, date, transactionType, description, amount, category, synced, deleted, createdAt, modifiedAt',
-//     categories: '++id, uuid, name, transactionType, createdAt, modifiedAt, deleted, synced'
-// })
-
 db.version(1).stores({
     transactions: `
         ++id,
         uuid,
-        fingerprint,
+        &fingerprint,
         date,
         transactionType,
         description,
@@ -22,8 +17,7 @@ db.version(1).stores({
         synced,
         deleted,
         createdAt,
-        modifiedAt,
-        &fingerprint
+        modifiedAt
     `,
     categories: `
         ++id,
@@ -34,6 +28,10 @@ db.version(1).stores({
         modifiedAt,
         deleted,
         synced
+    `,
+    settings: `
+        key,
+        value
     `
 })
 

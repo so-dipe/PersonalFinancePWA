@@ -2,20 +2,41 @@ import { writable } from "svelte/store";
 import { db } from "./db";
 import { resolve } from "$app/paths";
 
-export const googleToken = writable(null);
+export const driveToken = writable(null);
+export const gmailToken = writable(null);
+
+export const googleProfile = writable(null);
 
 const CLIENT_ID = '1088000417078-7kdb0m71l7hod2jmjlh5tnksj3kr6f46.apps.googleusercontent.com';
 
-const SCOPES = [
-    'https://www.googleapis.com/auth/drive.appdata',
-    'https://www.googleapis.com/auth/gmail.readonly'
-].join(' ');
+const SCOPES = {
+    DRIVE: 'https://www.googleapis.com/auth/drive.appdata',
+    GMAIL: 'https://www.googleapis.com/auth/gmail.readonly'
+}
 
-let tokenClient;
-let pendingResolve;
-let pendingReject;
+const tokenClients = {};
+const pending = {};
 
 let googleApiLoaded = false;
+let identityInitialized = false;
+
+function initTokenClient(scopeKey, scope) {
+    if (tokenClients[scopeKey]) return;
+
+    tokenClients[scopeKey] = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope,
+        callback: (response) => handleTokenResponse(scopeKey, response)
+    });
+}
+
+function tokenKey(scopeKey) {
+    return `g_token_${scopeKey}`;
+}
+
+function expiryKey(scopeKey) {
+    return `g_expiry_${scopeKey}`;
+}
 
 export function loadGoogleApi() {
     return new Promise((resolve) => {
@@ -35,69 +56,67 @@ export function loadGoogleApi() {
     });
 }
 
-export function initGoogleAuth() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: handleTokenResponse
-    });
-
-    const savedToken = localStorage.getItem('g_token');
-    const expiry = localStorage.getItem('g_expiry');
-
-    if (savedToken && expiry && Date.now() < parseInt(expiry)) {
-        googleToken.set(savedToken)
-        return;
-    }
-}
-
-function requestNewToken(prompt = '') {
-    return new Promise((resolve, reject) => {
-        pendingResolve = resolve;
-        pendingReject = reject;
-        console.log('Requesting new token with prompt:', prompt);
-        tokenClient.requestAccessToken({prompt});
-    });
-}
-
-function handleTokenResponse(response) {
-    console.log('Token response:', response);
+function handleTokenResponse(scopeKey, response) {
     if (response.error) {
-        googleToken.set(null);
-        pendingReject?.(response.error);
-        pendingResolve = pendingReject = null
+        pending[scopeKey]?.reject(response.error);
+        pending[scopeKey] = null;
         return;
     }
 
     const expiresAt = Date.now() + response.expires_in * 1000;
 
-    localStorage.setItem('g_token', response.access_token);
-    localStorage.setItem('g_expiry', expiresAt.toString());
+    localStorage.setItem(tokenKey(scopeKey), response.access_token);
+    localStorage.setItem(expiryKey(scopeKey), expiresAt.toString());
 
-    googleToken.set(response.access_token);
+    if (scopeKey === 'DRIVE') driveToken.set(response.access_token);
+    if (scopeKey === 'GMAIL') gmailToken.set(response.access_token);
 
-    pendingResolve?.(response.access_token);
-    pendingResolve = pendingReject = null;
+    pending[scopeKey]?.resolve(response.access_token);
+    pending[scopeKey] = null;
 }
 
-export async function ensureValidToken() {
-    const token = localStorage.getItem('g_token');
-    const expiry = localStorage.getItem('g_expiry');
+export async function getCachedToken(scopeKey) {
+    const token = localStorage.getItem(tokenKey(scopeKey));
+    const expiry = localStorage.getItem(expiryKey(scopeKey));
 
-    if (token && expiry && Date.now() < parseInt(expiry) - 60000) {
-        googleToken.set(token);
-        return Promise.resolve(token);
+    if (token && expiry && Date.now() < parseInt(expiry) - 60_000) {
+        if (scopeKey === 'DRIVE') driveToken.set(token);
+        if (scopeKey === 'GMAIL') gmailToken.set(token);
     }
-
-    return requestNewToken();        
+    return null;
 }
 
-export function login() {
-    if (!tokenClient) initGoogleAuth();
-    tokenClient.requestAccessToken({prompt: 'consent'});
+export function requestToken(scopeKey, prompt = '') {
+    return new Promise((resolve, reject) => {
+        pending[scopeKey] = { resolve, reject };
+        tokenClients[scopeKey].requestAccessToken({ prompt });
+    });
 }
 
-export async function uploadFile(filename, data, token) {
+export async function ensureDriveToken({ interactive = false} = {}) {
+    initTokenClient('DRIVE', SCOPES.DRIVE);
+
+    const cached = await getCachedToken('DRIVE');
+    if (cached) return cached;
+
+    if (!interactive) return null;
+    return requestToken('DRIVE');
+}
+
+export async function ensureGmailToken({ interactive = false} = {}) {
+    initTokenClient('GMAIL', SCOPES.GMAIL);
+
+    const cached = await getCachedToken('GMAIL');
+    if (cached) return cached;
+
+    if (!interactive) return null;
+    return requestToken('GMAIL');
+}
+
+export async function uploadFile(filename, data) {
+    const token = await ensureDriveToken({ interactive: true});
+    if (!token) throw new Error('Drive access not granted');
+
     const metadata = {
         name: filename,
         parents: ['appDataFolder'],
@@ -124,18 +143,42 @@ export async function uploadFile(filename, data, token) {
     return response.json();
 }
 
-export async function listDriveFiles(entityName, token) {
+export async function updateFile(fileId, data) {
+    const token = await ensureDriveToken({ interactive: true});
+    if (!token) throw new Error('Drive access not granted');
+
+    const response = await fetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+        {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }
+    )
+    if(!response.ok) throw new Error('Failed to update file');
+}
+
+export async function listDriveFiles(entityName) {
+    const token = await ensureDriveToken({ interactive: true});
+    if (!token) throw new Error('Drive access not granted');
+
     gapi.client.setToken({access_token: token});
     const response = await gapi.client.drive.files.list({
         spaces: 'appDataFolder',
-        q: `name contains '${entityName}-'`,
+        q: `name contains '${entityName}'`,
         fields: `files(id,name,appProperties)`
     });
 
     return response.result?.files;
 }
 
-export async function downloadFile(fileID, token) {
+export async function downloadFile(fileID) {
+    const token = await ensureDriveToken({ interactive: true});
+    if (!token) throw new Error('Drive access not granted');
+
     gapi.client.setToken({access_token: token});
     const response = await gapi.client.drive.files.get({
         fileId: fileID,
@@ -146,17 +189,6 @@ export async function downloadFile(fileID, token) {
 }
 
 //GMAIL FUNCTIONS
-
-export async function listTransactionEmails(query, token) {
-    gapi.client.setToken({access_token: token});
-    const response = await gapi.client.gmail.users.messages.list({
-        userId: 'me',
-        q: query,
-        maxResults: 100
-    });
-
-    return response.result?.messages || [];
-}
 
 export function constructEmailQuery(from='', subject='', afterDate='') {
     let query = '';
@@ -169,6 +201,22 @@ export function constructEmailQuery(from='', subject='', afterDate='') {
     return query.trim();
 }
 
+export async function listTransactionEmails(query) {
+    const token = await ensureGmailToken({ interactive: true});
+
+    if (!token) return [];
+
+    gapi.client.setToken({access_token: token});
+
+    const response = await gapi.client.gmail.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: 100
+    });
+
+    return response.result?.messages ?? [];
+}
+
 export async function getEmailContent(messageId, token) {
     gapi.client.setToken({access_token: token});
     const response = await gapi.client.gmail.users.messages.get({
@@ -178,4 +226,29 @@ export async function getEmailContent(messageId, token) {
     });
 
     return response.result;
+}
+
+//GOOGLE ID
+
+export async function fetchGoogleProfile() {
+    return new Promise((resolve, reject) => {
+        google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            callback: (res) => {
+                const payload = JSON.parse(atob(res.credential.split('.')[1]));
+                const profile = {
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                };
+                googleProfile.set(profile);
+                resolve(profile);
+            }
+        });
+        google.accounts.id.prompt((notif) => {
+            if (notif.isNotDisplayed() || notif.isSkippedMoment()) {
+                reject('User dismissed the prompt');
+            }
+        });
+    });
 }

@@ -37,9 +37,9 @@
         position: fixed;
         top: 0;
         right: 0;
-        height: 100vh;
-        width: 100vw;
-        max-width: 100vw;
+        height: 100%;
+        width: 100%;
+        max-width: 100%;
 
 
         background: var(--bg-card);
@@ -57,8 +57,8 @@
     /* Desktop width */
     @media(min-width: 768px) {
         .sidebar {
-            width: 50vw;
-            max-width: 50vw;
+            width: 50%;
+            max-width: 50%;
         }
     }
 
