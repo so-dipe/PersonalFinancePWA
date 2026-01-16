@@ -4,7 +4,6 @@
     import { liveQuery } from "dexie";
     import { db, useSetting } from "$lib/db";
     import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
-    import { settings } from "$lib/settings/store";
     import { syncAll } from "$lib/sync/sync";
 
     let recentTransactions;
