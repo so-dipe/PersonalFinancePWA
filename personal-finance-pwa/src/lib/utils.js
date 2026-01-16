@@ -71,3 +71,13 @@ export function excelDateToJSDate(excelDate) {
     const utcValue = utcDays * 86400; 
     return new Date(utcValue * 1000).toISOString().slice(0, 10);
 }
+
+export function getDefaultTransactionForm() {
+    return {
+        date: new Date().toISOString().slice(0, 10),
+        transactionType: "Expense",
+        description: "",
+        amount: "",
+        category: ""
+    }
+}

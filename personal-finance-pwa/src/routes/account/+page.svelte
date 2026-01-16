@@ -3,48 +3,89 @@
     import { saveSettings, settings } from "$lib/settings/store";
     import { get } from "svelte/store"
     import Settings from "$lib/components/Settings.svelte";
-    import { db } from "$lib/db";
+    import { db, useSetting, setSetting, getSetting } from "$lib/db";
+    import { formatDateTime } from "$lib/utils";
+    import { syncAll } from "$lib/sync/sync";
+    import { notify } from "$lib/notification/store";
 
+    const account = useSetting('account');
+    const sync = useSetting('sync');
+
+    let isConnecting = false;
     let isSyncing = false;
 
-    async function handleSyncButton() {
-        isSyncing = true;
+    async function connectGoogleDrive() {
+        isConnecting = true;
         try {
             const token = await ensureDriveToken({interactive: false}) ?? await ensureDriveToken({interactive: true});
-            if (!get(driveToken)) return;
+            if (!token) return;
 
             await fetchGoogleProfile();
             const profile = get(googleProfile);
 
             if (profile) {
-                await saveSettings({
-                    ...get(settings),
-                    account: profile
+                const accountSetting = await getSetting('account');
+                await setSetting('account', {
+                    ...accountSetting,
+                    ...profile,
+                    setBy: 'google'
                 })
             };
 
-            await saveSettings({
-                ...get(settings),
-                sync: {
-                    ...get(settings).sync,
-                    enabled: true,
-                }
+            const currentSync = await getSetting("sync");
+            await setSetting('sync', {
+                ...currentSync,
+                enabled: true
             });
+        } finally {
+            isConnecting = false;
+        }
+    }
+
+    async function disconnectGoogle() {
+        localStorage.removeItem('g_token_drive');
+        localStorage.removeItem('g_token_drive');
+        driveToken.set(null);
+
+        const currentSync = await getSetting('sync');
+        await setSetting('sync', { ...currentSync, enabled: false });
+    }
+
+    async function manualSync() {
+        if (isSyncing) return;
+        isSyncing = true;
+        try{
+            await syncAll();
+            notify({ type: "success", message: "Synced!🎉"})
+        } catch (err) {
+            notify({ type: "error", message: "Sync Failed.❌"})
         } finally {
             isSyncing = false;
         }
-        
     }
+    $: connectionStatus = $sync?.enabled ? `Connected as ${$account?.name}` : "Not Connected"
 </script>
 
 <div class="account-page">
     <div class="account-top">
-        <img class="avatar" src={$settings.account?.picture} alt="Profile Picture">
+        <img class="avatar" src={$account?.picture} alt="Profile">
         <div class="user-info">
-            <h2>{$settings.account?.name}</h2>
-            <button class="sync-btn" on:click={async () => await handleSyncButton()} disabled={$settings.sync?.enabled || isSyncing}>
-                {isSyncing ? "Syncing..." : "Sync with Google Drive"}
-            </button>
+            <h3>{$account?.name ?? "Your Account"}</h3>
+            <p class="status">
+                {connectionStatus}
+                {#if $sync?.enabled}
+                    &nbsp; | &nbsp;
+                    <a class="disconnect-link" on:click={disconnectGoogle}>Disconnect</a>
+                {:else}
+                    <a class="connect-link" on:click={connectGoogleDrive}>{isConnecting ? "Connecting...": "Connect to Google Drive"}</a>
+                {/if}
+                <br>
+                <a class="sync-status" on:click={manualSync}>
+                    {$sync?.enabled 
+                        ? `Last synced: ${formatDateTime(new Date($sync?.lastSync))} ${isSyncing ? "(Syncing...)": ""}`: ""
+                    }
+                </a>
+            </p>
         </div>
     </div>
     <Settings />
@@ -78,29 +119,26 @@
     }
 
 
-    .user-info h2 {
-        font-size: 1.8rem;
-        font-weight: 900;
+    .user-info h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
         margin: 0;
     }
 
+    .user-info .status {
+        font-size: 0.95rem;
+        margin-top: 0.25rem;
+        color: var(--gray-700);
+    }
 
-    .sync-btn {
-        margin-top: 0.5rem;
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: var(--radius-md);
-        border: none;
-        background: var(--green-900);
-        color: white;
+    .connect-link, .disconnect-link {
+        color: var(--green-900);
         cursor: pointer;
-        transition: background 0.2s ease;
+        font-weight: 600;
     }
 
 
-    .sync-btn:hover {
-        background: var(--green-700);
+    .connect-link:hover, .disconnect-link:hover {
+        color: var(--green-500);
     }
-
 </style>

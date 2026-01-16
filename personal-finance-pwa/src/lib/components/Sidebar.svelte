@@ -16,9 +16,10 @@
 
 <aside class="sidebar" class:open={open}>
     <nav class="flex-col">
-        <button on:click={() => navigate('/')}>transactions</button>
-        <button on:click={() => navigate('/')}>budget</button>
-        <button on:click={() => navigate('/')}>analytics</button>
+        <button on:click={() => navigate('/')}>add</button>
+        <button on:click={() => navigate('/transactions')}>transactions</button>
+        <button on:click={() => navigate('/')} disabled>budget</button>
+        <button on:click={() => navigate('/')} disabled>analytics</button>
         <button on:click={() => navigate('/account')}>account</button>
     </nav>
 </aside>

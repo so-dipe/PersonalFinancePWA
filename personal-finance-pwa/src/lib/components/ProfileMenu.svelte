@@ -1,21 +1,22 @@
 <script>
     import { goto } from "$app/navigation";
+    import { useSetting } from "$lib/db";
     import { settings } from "$lib/settings/store";
     export let sidebarOpen = false;
 
     function toggleSidebar() {
         sidebarOpen = !sidebarOpen;
     }
+
+    const account = useSetting('account');
 </script>
 
 
 <div class="nav card">
     <button class="profile-btn" on:click={() => goto('/account')} aria-label="Account">
-        <img src={$settings.account?.picture} alt="Profile" class="avatar">
+        <img src={$account?.picture} alt="Profile" class="avatar">
     </button>
 
-
-    <!-- Hamburger with reactive class binding -->
     <button class="hamburger" class:open={sidebarOpen} on:click={toggleSidebar} aria-label="Toggle Sidebar">
         <span class="bar top"></span>
         <span class="bar middle"></span>

@@ -3,28 +3,26 @@
     import ToggleSwitch from './ToggleSwitch.svelte';
     import { settings, saveSettings } from '$lib/settings/store';
     import { get } from 'svelte/store';
+    import { useSetting, getSetting, setSetting } from '$lib/db';
 
-    function updateAutoSync(value) {
-        const current = get(settings);
+    const syncSetting = useSetting("sync");
+    const displaySetting = useSetting("display");
 
-        saveSettings({
+    async function updateAutoSync(value) {
+        const current = await getSetting("sync");
+
+        setSetting("sync", {
             ...current,
-            sync: {
-                ...current.sync,
-                autoSync: value
-            }
-        })
+            autoSync: value
+        });
     }
 
-    function updateDarkMode(value) {
-        const current = get(settings);
+    async function updateDarkMode(value) {
+        const current = await getSetting("display");
 
-        saveSettings({
+        setSetting("display", {
             ...current,
-            display: {
-                ...current.display,
-                darkMode: value
-            }
+            darkMode: value
         })
     }
 </script>
@@ -34,23 +32,24 @@
     <div class="setting-item">
         <p class="text-muted mt-md">Settings</p>
     </div>
+
     <div class="setting-item">
         <ManageCategories />
     </div>
+
     <div class="setting-item">
         <ToggleSwitch
             label="Auto Sync"
-            checked={$settings.sync?.autoSync}
+            checked={$syncSetting?.autoSync}
             on:change={(e) => updateAutoSync(e.detail)}
-            disabled={!$settings.sync?.enabled}
+            disabled={!$syncSetting?.enabled}
         />
     </div>
-
 
     <div class="setting-item">
         <ToggleSwitch
             label="Dark Mode"
-            checked={$settings.display?.darkMode}
+            checked={$displaySetting?.darkMode}
             on:change={(e) => updateDarkMode(e.detail)}
         />
     </div>
@@ -61,7 +60,7 @@
 .settings {
     display: flex;
     flex-direction: column;
-    margin-top: 2rem;
+    margin-top: 0;
 }
 
 .setting-item {
@@ -73,5 +72,4 @@
 .setting-item > * {
     width: 100%;
 }
-
 </style>

@@ -2,12 +2,14 @@
     import { onMount } from "svelte";
     import { readable } from "svelte/store";
     import { liveQuery } from "dexie";
-    import { db } from "$lib/db";
+    import { db, useSetting } from "$lib/db";
     import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
     import { settings } from "$lib/settings/store";
     import { syncAll } from "$lib/sync/sync";
 
     let recentTransactions;
+
+    const sync = useSetting('sync');
 
     onMount(() => {
         recentTransactions = readable([], (set) => {
@@ -33,11 +35,11 @@
 
 <div class="card">
     <h3>
-        Transactions
-        {#if $settings.sync?.enabled}
+        Recent Transactions
+        {#if $sync?.enabled}
         <small>
             (<a class="sync-status" on:click={manualSync}>
-                synced: {formatDateTime(new Date($settings.sync?.lastSynced))}
+                Last synced: {formatDateTime(new Date($sync?.lastSync))}
             </a>)
         </small>
         {/if}

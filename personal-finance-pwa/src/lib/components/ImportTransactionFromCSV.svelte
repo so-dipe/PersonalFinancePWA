@@ -1,5 +1,5 @@
 <script>
-    import { addTransaction, isDuplicateTransaction } from '$lib/db';
+    import { addTransaction } from '$lib/db';
     import { runImportPipeline } from '$lib/import/pipeline';
     import { excelDateToJSDate } from '$lib/utils';
     import { json } from '@sveltejs/kit';

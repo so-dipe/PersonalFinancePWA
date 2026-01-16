@@ -10,7 +10,9 @@ export const googleProfile = writable(null);
 const CLIENT_ID = '1088000417078-7kdb0m71l7hod2jmjlh5tnksj3kr6f46.apps.googleusercontent.com';
 
 const SCOPES = {
-    DRIVE: 'https://www.googleapis.com/auth/drive.appdata',
+    DRIVE_ID: [
+        'openid', 'profile', 'email', 'https://www.googleapis.com/auth/drive.appdata'
+    ].join(' '),
     GMAIL: 'https://www.googleapis.com/auth/gmail.readonly'
 }
 
@@ -95,7 +97,7 @@ export function requestToken(scopeKey, prompt = '') {
 }
 
 export async function ensureDriveToken({ interactive = false} = {}) {
-    initTokenClient('DRIVE', SCOPES.DRIVE);
+    initTokenClient('DRIVE', SCOPES.DRIVE_ID);
 
     const cached = await getCachedToken('DRIVE');
     if (cached) return cached;
@@ -232,24 +234,26 @@ export async function getEmailContent(messageId, token) {
 //GOOGLE ID
 
 export async function fetchGoogleProfile() {
-    return new Promise((resolve, reject) => {
-        google.accounts.id.initialize({
-            client_id: CLIENT_ID,
-            callback: (res) => {
-                const payload = JSON.parse(atob(res.credential.split('.')[1]));
-                const profile = {
-                    name: payload.name,
-                    email: payload.email,
-                    picture: payload.picture
-                };
-                googleProfile.set(profile);
-                resolve(profile);
-            }
-        });
-        google.accounts.id.prompt((notif) => {
-            if (notif.isNotDisplayed() || notif.isSkippedMoment()) {
-                reject('User dismissed the prompt');
-            }
-        });
-    });
+    const token = await ensureDriveToken({ interactive: true })
+    if (!token) throw new Error('Not authenticated.');
+
+    const res = await fetch(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        {
+            headers: { Authorization: `Bearer ${token}`}
+        }
+    );
+
+    if (!res.ok) throw new Error('Failed to fetch profile.');
+
+    const data = await res.json();
+
+    const profile = {
+        name: data.name,
+        email: data.email,
+        picture: data.picture
+    };
+
+    googleProfile.set(profile);
+    return profile;
 }

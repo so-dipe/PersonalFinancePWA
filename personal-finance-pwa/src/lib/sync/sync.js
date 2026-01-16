@@ -1,18 +1,14 @@
 import { uploadFile, downloadFile, listDriveFiles } from "../google";
-import { db } from "../db";
+import { db, getSetting, setSetting } from "../db";
 import { settings, saveSettings } from "$lib/settings/store";
 import { get } from "svelte/store";
 
 async function updateLastSynced() {
-    const current = get(settings);
-    await saveSettings({
-        ...current,
-        sync: {
-            ...current.sync,
-            lastSynced: new Date().toISOString(),
-            status: 'idle'
-        }
-    })
+    const currentSync = await getSetting("sync");
+    await setSetting('sync', {
+        ...currentSync,
+        lastSync: new Date().toISOString()
+    });
 }
 
 export async function syncEntity(entityName) {
@@ -90,7 +86,7 @@ export function microTaskSyncEntity(entityName) {
 export async function syncAll() {
     try {
         const results = {};
-        for (const entity of ['transactions', 'categories']) {
+        for (const entity of ['transactions', 'categories', 'settings']) {
             results[entity] = await syncEntity(entity);
         }
         return results;

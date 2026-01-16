@@ -6,14 +6,12 @@
     import ImportTransactionFromCSV from "./ImportTransactionFromCSV.svelte";
     import { settings } from "$lib/settings/store";
     import { get } from "svelte/store"
+    import { getDefaultTransactionForm } from "$lib/utils";
+    import { onMount } from "svelte";
+    import { notify } from "$lib/notification/store";
+    import { errorToNotification } from "$lib/notification/toNotification";
 
-    let form = {
-        date: new Date().toISOString().slice(0, 10),
-        transactionType: "",
-        description: "",
-        amount: "",
-        category: ""
-    };
+    let form = getDefaultTransactionForm();
 
     let prefilled = {
         transactionType: false,
@@ -21,6 +19,10 @@
         amount: false,
         category: false
     };
+
+    function resetForm() {
+        form = getDefaultTransactionForm();
+    }
 
     function prefillForm(data) {
         form = {...form, ...data};
@@ -38,34 +40,36 @@
     let categories = [];
     let filteredCategories = [];
 
-    db.categories.where('deleted').equals(0).toArray().then((cats) => {
-        if (cats.length === 0) {
-            loadDefaultCategories().then(async () => {
-                categories = await db.categories.toArray();
-            });
-        } else {
-            categories = cats;
+    onMount(async () => {
+        let cats = await db.categories.where("deleted").equals(0).toArray();
+
+        if (!cats.length) {
+            await loadDefaultCategories();
+            cats = await db.categories.toArray();
         }
-    });
+        categories = cats;
+    })
+
+    $: filteredCategories = form.transactionType ? categories.filter((c) => c.transactionType === form.transactionType) : [];
 
     async function submit() {
-        await addTransaction(form);
-        
+        try {
+            await addTransaction(form);
+            resetForm();
+            notify({ type: "success", message: "Transaction Saved" })
+        } catch (err) {
+            console.error(err);
+            notify(errorToNotification(err))
+            return;
+        }
         const currentSettings = get(settings);
         if (currentSettings.sync.autoSync) {
-            await microTaskSyncEntity('transactions');
+            microTaskSyncEntity("transactions")
+                .catch(err => {
+                    console.warn("Autosync failed: ", err);
+                })
         }
-
-        form = {
-            date: new Date().toISOString().slice(0, 10),
-            transactionType: "",
-            description: "",
-            amount: "",
-            category: ""
-        };
     }
-
-    $: filteredCategories = form.transactionType ? categories.filter(c => c.transactionType === form.transactionType) : [];
 </script>
 
 <div class="card">
@@ -79,9 +83,9 @@
             <option>Expense</option>
         </select>
 
-        <input type="text" placeholder="Description" bind:value={form.description} class:prefilled={prefilled.transactionType}>
+        <input type="text" placeholder="Description" bind:value={form.description} class:prefilled={prefilled.description}>
 
-        <input type="number" placeholder="Amount" bind:value={form.amount} class:prefilled={prefilled.amount} required>
+        <input type="number" placeholder="Amount" step="0.01" bind:value={form.amount} class:prefilled={prefilled.amount} min="0" required>
 
         <select bind:value={form.category} class:prefilled={prefilled.category} required>
             <option value="" disabled selected>Select category</option>
@@ -119,5 +123,7 @@
         display: flex;
         flex-direction: column;
         gap: var(--space-sm);
+        padding: var(--space-md);
+        border-radius: var(--radius-sm);
     }
 </style>
