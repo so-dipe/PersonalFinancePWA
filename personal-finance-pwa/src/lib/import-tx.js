@@ -1,4 +1,4 @@
-import { constructEmailQuery, listTransactionEmails, getEmailContent } from "./google";
+import { constructEmailQuery, listTransactionEmails, getEmailContent, ensureGmailToken } from "./google";
 
 function parseTransactionEmail(body, date, sender) {
     const amountMatch = body.match(/NGN\s?([\d,]+\.\d{2})/);
@@ -12,7 +12,7 @@ function parseTransactionEmail(body, date, sender) {
 }
 
 export async function getTransactionsFromGmail(from="", subject="Transaction Notification", afterDate="") {
-    const token = await ensureValidToken();
+    const token = await ensureGmailToken({interactive: true});
     const query = constructEmailQuery(from, subject, afterDate);
     const emails = await listTransactionEmails(query, token);
 

@@ -1,10 +1,11 @@
 <script>
     import { notifications } from "$lib/notification/store";
+    import { fly, fade } from "svelte/transition";
 </script>
 
 <div class="notifications">
     {#each $notifications as n (n.id)}
-    <div class="notification {n.type} in:fly={{ y:-20, duration:200 }}">
+    <div class="notification {n.type}" in:fly={{ y:-20, duration:200 }} out:fade={{ duration: 200 }}>
         <span>{n.message}</span>
         {#if n.action}
             <button on:click={n.action.handler}>
@@ -12,7 +13,7 @@
             </button>
         {/if}
         {#if n.dismissible}
-            <button on:click={() => {notifications.update(x => x.filter(i => i.id !== n.id))}}>
+            <button class="dismiss-btn" on:click={() => {notifications.update(x => x.filter(i => i.id !== n.id))}}>
                 &times;
             </button>
         {/if}
@@ -33,7 +34,7 @@
     pointer-events: none;
 }
 
-.notfication {
+.notification {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -57,7 +58,7 @@
     background: var(--red-500);
 }
 
-.notfication.info {
+.notification.info {
     background: var(--green-500)
 }
 

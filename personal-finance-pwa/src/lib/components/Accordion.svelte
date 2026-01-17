@@ -1,10 +1,14 @@
 <script>
-    export let title;
+    import { slide } from "svelte/transition";
+
+    export let title = "staple battery sample horse";
     export let open = false;
 
     function toggle() {
         open = !open;
     }
+
+    if (!title) console.warn("Accordion title is missing");
 </script>
 
 <div class="accordion">
@@ -13,7 +17,7 @@
         <span class="chevron">{open ? '▾' : '▸'}</span>
     </button>
     {#if open}
-        <div class="accordion-body">
+        <div class="accordion-body" transition:slide>
             <slot />
         </div>
     {/if}

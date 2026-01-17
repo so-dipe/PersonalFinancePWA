@@ -1,29 +1,51 @@
 <script>
     import { addTransaction, getFrequentTransactions } from '$lib/db';
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { onMount, onDestroy, createEventDispatcher } from 'svelte';
     import { formatAmount } from '$lib/utils';
-    // import { microTaskSyncEntity } from '$lib/sync';
+    import { notify } from '$lib/notification/store';
 
     const dispatch = createEventDispatcher();
 
     let quickActions = [];
+    let loading = true;
+    let error = "";
 
-    async function selectQuickAction(tx) {
-        const date = new Date().toISOString().slice(0, 10);
-        const transactionType = tx.transactionType;
-        const description = tx.description;
-        const amount = tx.amount;
-        const category = tx.category;
+    let subscription;
 
-        // await addTransaction(date, transactionType, description, amount, category);
-        // await microTaskSyncEntity('transactions');
+    async function loadQuickActions() {
+        try {
+            const txObservable = await getFrequentTransactions();
+            subscription = txObservable.subscribe({
+                next: (txs) => {
+                    quickActions = txs;
+                    loading = false;
+                },
+                error: (err) => {
+                    console.error(err);
+                    error = "Failed to load quick actions.";
+                    notify({ type: "error", message: error });
+                    loading = false;
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            error = "Failed to load quick actions.";
+            notify({ type: "error", message: error });
+            loading = false;
+        }
+    }
+
+    function handleSelect(tx) {
+        dispatch('prefill', tx);
     }
     
     onMount(async () => {
-        const sub = (await getFrequentTransactions()).subscribe((txs) => {
-            quickActions = txs;
-        })
-    }) 
+        loadQuickActions();
+    });
+
+    onDestroy(() => {
+        subscription?.unsubscribe?.();
+    });
 </script>
 
 <div class="card">
@@ -33,7 +55,7 @@
             <p class="text-muted">No quick actions yet.</p>
         {:else}
             {#each quickActions as tx}
-                <button class="quick-action-btn" on:click={() => dispatch('prefill', tx)}>
+                <button class="quick-action-btn" on:click={() => handleSelect(tx)}>
                     {tx.description} - {tx.category} - {formatAmount(tx.amount)}
                 </button>
             {/each}

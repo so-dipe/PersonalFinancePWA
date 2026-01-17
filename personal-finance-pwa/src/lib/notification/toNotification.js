@@ -1,20 +1,10 @@
+const ERROR_MAP = {
+    TX_DUPLICATE: { type: "warning", message: "This transaction already exists." },
+    TX_SAVE_FAILED: { type: "error", message: "Failed to save transaction. Please try again." },
+    USER_NOT_AUTHORIZED: { type: "error", message: "You are not authorized to perform this action." },
+    NETWORK_ERROR: { type: "error", message: "Network issue. Please check your connection." }
+};
+
 export function errorToNotification(err) {
-    switch(err.code) {
-        case "TX_DUPLICATE":
-            return {
-                type: "warning",
-                message: "This transaction already exists."
-            };
-        case "TX_SAVE_FAILED":
-            return {
-                type: "error",
-                message: "Failed to save transaction. Please try again."
-            }
-        
-        default:
-            return {
-                type: "error",
-                message: "Something went wrong. Please try again."
-            }
-    }
+    return ERROR_MAP[err.code] || { type: "error", message: err.message || "Something went wrong. Please try again." };
 }

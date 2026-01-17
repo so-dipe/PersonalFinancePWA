@@ -12,6 +12,7 @@
     import { errorToNotification } from "$lib/notification/toNotification";
 
     let form = getDefaultTransactionForm();
+    let submitting = false;
 
     let prefilled = {
         transactionType: false,
@@ -94,8 +95,8 @@
             {/each}
         </select>
         
-        <button class="button-primary" type="submit">
-            Add transaction
+        <button class="button-primary" type="submit" disabled={submitting}>
+            {submitting ? 'Adding...' : 'Add transaction'}
         </button>
     </form>
 

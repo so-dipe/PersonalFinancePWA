@@ -2,6 +2,7 @@
     import { db, loadDefaultCategories } from "$lib/db";
     import SettingsAccordion from "./SettingsAccordion.svelte";
     import { onMount } from "svelte";
+    import { notify } from "$lib/notification/store";
 
     let categories = [];
     let editingId = null;
@@ -12,34 +13,41 @@
     let newType = 'Expense';
 
     async function loadCategories() {
-        let cats = await db.categories.where('deleted').equals(0).toArray();
-
-        if (cats.length === 0) {
-            await loadDefaultCategories();
-            cats = await db.categories.where('deleted').equals(0).toArray();
+        try {
+            let cats = await db.categories.where('deleted').equals(0).toArray();
+            if (cats.length === 0) {
+                await loadDefaultCategories();
+                cats = await db.categories.where('deleted').equals(0).toArray();
+            }
+            categories = cats;
+        } catch (err) {
+            console.error("Failed to load categories:", err);
+            notify({ type: "error", message: "Failed to load categories" });
         }
-        categories = cats;
     }
 
     onMount(loadCategories);
 
     async function addCategory() {
         if (!newName.trim()) return;
-
-        await db.categories.add({
-            uuid: crypto.randomUUID(),
-            name: newName.trim(),
-            transactionType: newType,
-            createdAt: new Date().toISOString(),
-            modifiedAt: new Date().toISOString(),
-            deleted: 0,
-            synced: 0
-        });
-
-        newName = '';
-        newType = 'Expense';
-
-        await loadCategories();
+        try {
+            await db.categories.add({
+                uuid: crypto.randomUUID(),
+                name: newName.trim(),
+                transactionType: newType,
+                createdAt: new Date().toISOString(),
+                modifiedAt: new Date().toISOString(),
+                deleted: 0,
+                synced: 0
+            });
+            notify({ type: "success", message: `Category "${newName}" added`  });
+            newName = '';
+            newType = 'Expense';
+            await loadCategories();
+        } catch (err) {
+            console.error("Failed to add category:", err);
+            notify({ type: "error", message: "Failed to add category"  });
+        }
     }
 
     function startEdit(cat) {
@@ -49,15 +57,20 @@
     }
 
     async function saveEdit(cat) {
-        await db.categories.update(cat.id, {
-            name: editName.trim(),
-            transactionType: editType,
-            modifiedAt: new Date().toISOString(),
-            synced: 0
-        });
-
-        editingId = null;
-        await loadCategories();
+        if (!editName.trim()) return; // prevent blank name
+        try {
+            await db.categories.update(cat.id, {
+                name: editName.trim(),
+                transactionType: editType,
+                modifiedAt: new Date().toISOString(),
+                synced: 0
+            });
+            notify({ type: "success", message: `Category "${editName}" updated` });
+            editingId = null;
+            await loadCategories();
+        } catch (err) {
+            notify({ type: "error", message: "Failed to update category"  });
+        }
     }
 
     function cancelEdit() {
@@ -66,14 +79,17 @@
 
     async function deleteCategory(cat) {
         if (!confirm(`Delete "${cat.name}"?`)) return;
-
-        await db.categories.update(cat.id, {
-            deleted: 1,
-            modifiedAt: new Date().toISOString(),
-            synced: 0
-        });
-
-        categories = categories.filter(c => c.id !== cat.id);
+        try {
+            await db.categories.update(cat.id, {
+                deleted: 1,
+                modifiedAt: new Date().toISOString(),
+                synced: 0
+            });
+            categories = categories.filter(c => c.id !== cat.id);
+            notify({ type: "success", message: `Category "${cat.name}" deleted` });
+        } catch (err) {
+            notify({ type: "error", message: "Failed to delete category" });
+        }
     }
 </script>
 
@@ -92,9 +108,11 @@
 
         <button class="add-btn" on:click={addCategory}>Add</button>
     </div>
+
     {#if categories.length === 0}
         <p class="text-muted">No categories available.</p>
     {/if}
+
     {#each categories as cat}
         <div class="category-row">
             {#if editingId === cat.id}
@@ -103,7 +121,7 @@
                     class="edit-input" 
                     bind:value={editName} 
                     on:keydown={(e) => e.key === 'Enter' && saveEdit(cat)}
-                    on:keydown={(e) => e.key === 'Escape' && cancelEdit(cat)}
+                    on:keydown={(e) => e.key === 'Escape' && cancelEdit()}
                 />
                 <select bind:value={editType}>
                     <option>Income</option>
@@ -132,6 +150,7 @@
         </div>
     {/each}
 </SettingsAccordion>
+
 
 <style>
 .add-row {

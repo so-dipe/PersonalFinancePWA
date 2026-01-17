@@ -1,11 +1,21 @@
 <script>
     import { goto } from "$app/navigation";
     import { useSetting } from "$lib/db";
+    import { notify } from "$lib/notification/store";
     import { settings } from "$lib/settings/store";
     export let sidebarOpen = false;
 
     function toggleSidebar() {
         sidebarOpen = !sidebarOpen;
+    }
+
+    async function goToAccount() {
+        try {
+            await goto('/account');
+        } catch (err) {
+            console.error(err);
+            notify({ type: "error", message: "Failed to navigate to Account page." });
+        }
     }
 
     const account = useSetting('account');
@@ -14,7 +24,11 @@
 
 <div class="nav card">
     <button class="profile-btn" on:click={() => goto('/account')} aria-label="Account">
-        <img src={$account?.picture} alt="Profile" class="avatar">
+        <img 
+            src={$account?.picture || '/avatar.png'} 
+            alt={$account?.name ? `${$account.name} Profile` : 'Profile'} 
+            class="avatar"
+        >
     </button>
 
     <button class="hamburger" class:open={sidebarOpen} on:click={toggleSidebar} aria-label="Toggle Sidebar">

@@ -6,6 +6,13 @@
 
 
     let sidebarOpen = false;
+    function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+    }
+
+    function closeSidebar() {
+        sidebarOpen = false;
+    }
     // let { children } = $props();
 </script>
 
@@ -20,7 +27,7 @@
 <div class="app">
     <Notifications />
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
-    <Sidebar bind:open={sidebarOpen} />
+    <Sidebar open={sidebarOpen} on:close={closeSidebar} />
 
 	<slot />
 </div>

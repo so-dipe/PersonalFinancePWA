@@ -1,8 +1,10 @@
 <script>
+    import { addTransactionsBulk } from "$lib/db";
     import { getTransactionsFromGmail } from "$lib/import-tx";
     import { runImportPipeline } from "$lib/import/pipeline";
     import Accordion from "./Accordion.svelte";
     import ImportDialog from "./ImportDialog.svelte";
+    import { notify } from "$lib/notification/store";
 
     let transactions = [];
     let loading = false;
@@ -10,10 +12,13 @@
 
     let showDialog = false;
 
+    const after = new Date();
+    after.setDate(after.getDate() - 30);
+
     let q = {
         from: "",
         subject: "Transaction Notification",
-        afterDate: "2025-01-01"
+        afterDate: after.toISOString().slice(0, 10)
     }
 
     async function loadTransactionsFromEmail() {
@@ -24,7 +29,7 @@
             const emails = await getTransactionsFromGmail(q.from, q.subject, q.afterDate);
             const raw = emails.map(e => ({
                 date: e.date,
-                transactionType: e.transactionType ?? 'expense',
+                transactionType: e.transactionType ?? 'Expense',
                 description: e.description,
                 amount: e.amount,
                 source: 'email',
@@ -36,44 +41,49 @@
             transactions = await runImportPipeline(raw);
             showDialog = true;
         } catch (e) {
-            error = e.message;
+            notify({type: "error", message: e.message || "Failed to load transactions from email."});
         } finally {
             loading = false;
         }
     }
 
     function commitImport() {
-        console.log("Ready to commit!")
+        try {
+            const readyTransactions = transactions.filter(
+                (tx) => tx.status === "ready"
+            );
+            addTransactionsBulk(readyTransactions);
+            notify({ type: "success", message: `🎉Yay...Successfully imported ${readyTransactions.length} transactions!`});
+            showDialog = false;
+        } catch (err) {
+            notify({ type: "error", message: "❌Oops...Import failed. Please try again"});
+        }
     }
-
 </script>
 
 <Accordion title="Import from Email">
     <div class="email-form">
-        <label>
+        <label for="fromInput">
             Sender
-            <input bind:value={q.from} placeholder="e.g. alerts@bank.com" />
+            <input id="fromInput" bind:value={q.from} placeholder="e.g. alerts@bank.com" />
         </label>
-        <label>
+        <label for="subjectInput">
             Subject contains
-            <input bind:value={q.subject} />
+            <input id="subjectInput" bind:value={q.subject} />
         </label>
-        <label>
+        <label for="afterDateInput">
             After date
-            <input type="date" bind:value={q.afterDate} />
+            <input id="afterDateInput" type="date" bind:value={q.afterDate} />
         </label>
         <button class="primary" on:click={loadTransactionsFromEmail} disabled={loading}>
             {loading ? 'Loading...' : 'Load Transactions'}
         </button>
-        {#if error}
-            <p class="error">{error}</p>
-        {/if}
     </div>
 </Accordion>
 {#if showDialog}
     <ImportDialog
         {transactions}
-        onClose={() => (showDialog = false)}
+        onClose={() => {showDialog = false; transactions = []}}
         onCommit={commitImport}
     />
 {/if}

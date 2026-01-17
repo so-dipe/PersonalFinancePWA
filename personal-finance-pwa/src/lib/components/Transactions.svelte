@@ -43,6 +43,7 @@
         </small>
         {/if}
     </h3>
+    <div class="table-wrapper">
     <table>
         <thead>
             <tr>
@@ -75,6 +76,7 @@
             {/if}
         </tbody>
     </table>
+    </div>
 </div>
 
 <style>

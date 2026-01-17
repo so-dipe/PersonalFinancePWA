@@ -219,12 +219,19 @@ select:focus {
 /*===========================
     Table
 ============================*/
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
     text-align: left;
-    overflow-x: auto;
 }
 
 /* Headings */

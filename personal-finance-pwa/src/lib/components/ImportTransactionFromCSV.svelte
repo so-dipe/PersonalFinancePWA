@@ -1,11 +1,12 @@
 <script>
-    import { addTransaction } from '$lib/db';
+    import { addTransaction, addTransactionsBulk } from '$lib/db';
     import { runImportPipeline } from '$lib/import/pipeline';
     import { excelDateToJSDate } from '$lib/utils';
     import { json } from '@sveltejs/kit';
     import * as XLSX from 'xlsx';
     import Accordion from './Accordion.svelte';
     import ImportDialog from './ImportDialog.svelte';
+    import { notify } from '$lib/notification/store';
 
     let file;
     let transactions = [];
@@ -14,39 +15,26 @@
     let showDialog = false;
     let loading = false;
 
-    async function ImportCSV(rows) {
-        const raw = rows.map(r => ({
-            date: r[0],
-            transactionType: r[1],
-            description: r[2],
-            amount: r[3],
-            category: r[4],
-            source: 'csv/excel'
-        }))
-
-        transactions = await runImportPipeline(raw);
-        showDialog = true;
-    }
-
     function handleFileChange(event) {
         file = event.target.files[0];
     }
 
-    async function importCSV(rows) {
+    async function processRows(rows) {
         const raw = rows
             .filter(r => r.length >= 4)
             .map(r => ({
                 date: excelDateToJSDate(r[0]),
                 transactionType: r[1] ?? 'expense',
-                description: r[2],
-                amount: r[3],
-                category: r[4],
+                description: r[2] || '',
+                amount: r[3] ?? 0,
+                category: r[4] || '',
                 source: 'csv/excel'
             }));
-        
+
         transactions = await runImportPipeline(raw);
         showDialog = true;
     }
+
 
     function importFile() {
         if (!file) return;
@@ -54,22 +42,42 @@
         const reader = new FileReader();
 
         reader.onload = async (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
+            try {
+                loading = true;
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
 
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-            const rows = hasHeader ? jsonData.slice(1): jsonData;
-            loading = true;
-            await importCSV(rows);
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                const rows = hasHeader ? jsonData.slice(1): jsonData;
+                
+                if (!rows.length) throw new Error("No data found in the sheet.")
+
+                await processRows(rows);
+            } catch (err) {
+                notify({ type: "error", message: "❌Failed"})
+            } finally {
+                loading = false;
+            }
+        }
+
+        reader.onerror = () => {
             loading = false;
         }
         reader.readAsArrayBuffer(file);
     }
 
     function commitImport() {
-        console.log("Ready to commit!")
+        try {
+            const readyTransactions = transactions.filter(
+                (tx) => tx.status === "ready"
+            );
+            addTransactionsBulk(readyTransactions);
+            showDialog = false;
+        } catch (err) {
+            notify({ type: "error", message: "❌Oops...Import failed."})
+        }
     }
 </script>
 
@@ -87,9 +95,9 @@
     </div>
     <div class="upload-form">
         <label class="file-input">
-            <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} />
+            <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} disabled={loading} />
         </label>
-        <label class="checkbox">
+        <label class="checkbox" for="hasHeader">
             <input type="checkbox" id="hasHeader" bind:checked={hasHeader} disabled={!file}/>
             <span>First row is header</span>
         </label>

@@ -4,26 +4,36 @@
     import { settings, saveSettings } from '$lib/settings/store';
     import { get } from 'svelte/store';
     import { useSetting, getSetting, setSetting } from '$lib/db';
+    import { notify } from '$lib/notification/store';
 
     const syncSetting = useSetting("sync");
     const displaySetting = useSetting("display");
 
     async function updateAutoSync(value) {
-        const current = await getSetting("sync");
-
-        setSetting("sync", {
-            ...current,
-            autoSync: value
-        });
+        try {
+            const current = await getSetting("sync");
+            await setSetting("sync", {
+                ...current,
+                autoSync: value
+            });
+            notify({ type: "success", message: `Auto Sync ${value ? 'enabled' : 'disabled'}` });
+        } catch (err) {
+            notify({ type: "error", message: "Failed to update Auto Sync setting" });
+        }
     }
 
     async function updateDarkMode(value) {
-        const current = await getSetting("display");
-
-        setSetting("display", {
-            ...current,
-            darkMode: value
-        })
+        try {
+            const current = await getSetting("display");
+            await setSetting("display", {
+                ...current,
+                darkMode: value
+            });
+            notify({ type: "success", message: `Dark Mode ${value ? 'enabled' : 'disabled'}` });
+        } catch (err) {
+            console.error(err);
+            notify({ type: "error", message: "Failed to update Dark Mode setting" });
+        }
     }
 </script>
 

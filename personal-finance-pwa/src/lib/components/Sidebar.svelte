@@ -1,16 +1,30 @@
 <script>
     import { goto } from "$app/navigation";
+    import { createEventDispatcher } from "svelte";
+    
     export let open = false;
+    const dispatch = createEventDispatcher();
 
-    function navigate(path) {
-        goto(path);
-        open = false;
+    async function navigate(path, disabled = false) {
+        if (disabled) return;
+
+        try {
+            await goto(path);
+            dispatch("close");
+        } catch (err) {
+            console.error(err);
+            dispatch("error", { message: `Failed to navigate to ${path}` });
+        }
+    }
+
+    function closeSidebar() {
+        dispatch("close");
     }
 </script>
 
 
 {#if open}
-    <div class="sidebar-backdrop" on:click={() => open = false}></div>
+    <div class="sidebar-backdrop" on:click={closeSidebar}></div>
 {/if}
 
 
@@ -18,8 +32,8 @@
     <nav class="flex-col">
         <button on:click={() => navigate('/')}>add</button>
         <button on:click={() => navigate('/transactions')}>transactions</button>
-        <button on:click={() => navigate('/')} disabled>budget</button>
-        <button on:click={() => navigate('/')} disabled>analytics</button>
+        <button on:click={() => navigate('/', true)} disabled>budget</button>
+        <button on:click={() => navigate('/', true)} disabled>analytics</button>
         <button on:click={() => navigate('/account')}>account</button>
     </nav>
 </aside>
@@ -81,12 +95,17 @@
     }
 
 
-    nav button:hover {
+    nav button:hover:not(:disabled) {
         color: var(--green-700);
     }
 
-
-    nav button.active {
-        color: var(--green-900);
+    nav button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
     }
+
+
+    /* nav button.active {
+        color: var(--green-900);
+    } */
 </style>
