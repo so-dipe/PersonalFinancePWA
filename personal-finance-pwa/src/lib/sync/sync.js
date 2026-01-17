@@ -51,11 +51,15 @@ export async function syncEntity(entityName) {
 
             if (remoteModified <= localModified) continue;
             if (localItem && remoteItemProperties.deleted ===1) {
-                await db[entityName].where('uuid').equals(uuid).delete();
+                await db[entityName].where('uuid').equals(uuid).modify({
+                        deleted: 1,
+                        synced: 1,
+                        modifiedAt: remoteItemProperties.modifiedAt
+                    });
                 pulled++;
                 continue;
             }
-            if (remoteModified > new localModified) {
+            if (remoteModified > localModified) {
                 const remoteItem = await downloadFile(file.id);
                 delete remoteItem.id;
                 await db[entityName].update(localItem.id, {...remoteItem, synced: 1});
@@ -63,7 +67,7 @@ export async function syncEntity(entityName) {
                 continue;
             }
         }
-    await updateLastSynced();
+        await updateLastSynced();
     } catch (err) {
         console.error("Sync failed for entity", entityName, err)
     }
@@ -71,26 +75,17 @@ export async function syncEntity(entityName) {
 }
 
 export function microTaskSyncEntity(entityName) {
-    let pushed = 0;
-    let pulled = 0;
-    queueMicrotask(async() => {
-        try {
-            pushed, pulled = await syncEntity(entityName);
-        } catch (err) {
-            throw new Error(`Sync deffered for ${entityName}`);
-        }
+    queueMicrotask(() => {
+        syncEntity(entityName).catch(err =>
+            console.error(`Deferred sync failed for ${entityName}`, err)
+        );
     });
-    return pushed, pulled
 }
 
 export async function syncAll() {
-    try {
-        const results = {};
-        for (const entity of ['transactions', 'categories', 'settings']) {
-            results[entity] = await syncEntity(entity);
-        }
-        return results;
-    } catch (err) {
-        throw new Error('Syncing failed, need to reauthenticate', err);
+    const results = {};
+    for (const entity of ["transactions", "categories", "settings"]) {
+        results[entity] = await syncEntity(entity);
     }
+    return results;
 }

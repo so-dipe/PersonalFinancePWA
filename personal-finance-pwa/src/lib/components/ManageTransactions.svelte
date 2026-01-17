@@ -74,7 +74,7 @@
     }
 
     async function saveEdit() {
-        if (!editingTx.transactionType || !editingTx.amount || !existingTx.category) {
+        if (!editingTx.transactionType || !editingTx.amount || !editingTx.category) {
             notify({ type: "warning", message: "TransactionType/Amount/Category cannot be empty" });
             return;
         }
@@ -91,11 +91,47 @@
         editingTx = null;
     }
 
+    async function exportCSV() {
+        let txs = await db.transactions
+            .where('deleted').equals(0)
+            .sortBy('createdAt');
+
+        if (!txs.length) {
+            notify({ type: "warning", message: "No transactions to export." });
+            return;
+        }
+
+        const header = ['Date', 'Type', 'Description', 'Amount', 'Category', 'Synced'];
+
+        const rows = txs.map(tx => [
+            tx.date,
+            tx.transactionType,
+            `"${tx.description.replace(/"/g, '""')}"`,
+            tx.amount,
+            tx.category ?? '',
+            tx.synced ? 'Yes' : 'No'
+        ]);
+
+        const csvContent = [header, ...rows]
+            .map(r => r.join(','))
+            .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `transactions-${new Date().toISOString().slice(0,10)}.csv`);
+        link.click();
+
+        notify({ type: "success", message: "CSV exported!" });
+    }
+
     $: filteredCategories = editingTx?.transactionType ? categories.filter((c) => c.transactionType === editingTx?.transactionType) : [];
 
 </script>
 
-<div class="card transactions-card">
+<div class="card transactions-container">
     <h3>
         Transactions
         {#if $sync?.enabled}
@@ -107,7 +143,7 @@
         {/if}
     </h3>
 
-
+    <div class="table-wrapper">
     <table>
         <thead>
             <tr>
@@ -141,10 +177,43 @@
             {/if}
         </tbody>
     </table>
+    </div>
+
+    <div class="export-footer">
+        <button class="export-btn" on:click={exportCSV}>
+            Export CSV
+        </button>
+    </div>
 </div>
 
 <style>
-    tbody td:nth-child(4) {
-        text-align: right;
-    }
+.transactions-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+tbody td:nth-child(4) {
+    text-align: right;
+}
+
+.export-footer {
+    position: sticky;
+    bottom: 0;
+    background: white; /* match card background */
+    padding: 0.5rem;
+    text-align: right;
+    border-top: 1px solid #eee;
+}
+
+.export-btn {
+    background: var(--green-900);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+}
 </style>

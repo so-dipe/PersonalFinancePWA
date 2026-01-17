@@ -212,47 +212,102 @@ export function makeCategoryFingerprint(name, transactionType) {
 }
 
 export async function loadDefaultCategories() {
+    const now = new Date().toISOString();
 
     for (const [name, transactionType] of Object.entries(defaultCategories)) {
-        const existing = await db.categories.where('name').equals(name).first();
-        if (!existing) {
-            await db.categories.add({
-                uuid: crypto.randomUUID(),
-                name: name,
-                transactionType: transactionType,
-                createdAt: new Date().toISOString(),
-                modifiedAt: new Date().toISOString(),
-                deleted: 0,
-                synced: 0
-            });
-        }
+        const fingerprint = makeCategoryFingerprint(name, transactionType);
+
+        const existing = await db.categories
+            .where("fingerprint")
+            .equals(fingerprint)
+            .first();
+
+        if (existing) continue;
+
+        await db.categories.add({
+            uuid: crypto.randomUUID(),
+            fingerprint,
+            name,
+            transactionType,
+            createdAt: now,
+            modifiedAt: now,
+            deleted: 0,
+            synced: 0
+        });
     }
 }
 
+
 export async function addCategory(name, transactionType) {
-    const fingerprint = makeCategoryFingerprint(name, transactionType)
+    const fingerprint = makeCategoryFingerprint(name, transactionType);
     const existing = await db.categories.where('fingerprint').equals(fingerprint).first();
 
-    if (existing) return existing.uuid;
+    if (existing) throw { code: "CAT_DUPLICATE", meta: { id: existing.id } };
 
-    await db.categories.add({
-        uuid: crypto.randomUUID(),
-        name: name,
-        transactionType: transactionType,
-        createdAt: new Date().toISOString(),
-        modifiedAt: new Date().toISOString(),
-        deleted: 0,
-        synced: 0
-    });
-
-    return uuid;
+    try {
+        await db.categories.add({
+            uuid: crypto.randomUUID(),
+            fingerprint,
+            name,
+            transactionType,
+            createdAt: new Date().toISOString(),
+            modifiedAt: new Date().toISOString(),
+            deleted: 0,
+            synced: 0
+        });
+        return true;
+    } catch (err) {
+        if (err.name === "ConstraintError") {
+            const existing = await db.categories
+                .where("fingerprint")
+                .equals(fingerprint)
+                .first();
+            throw { code: "CAT_DUPLICATE", meta: { id: existing?.id } };
+        }
+        throw { code: "CAT_SAVE_FAILED", meta: {} };
+    }
 }
+
+
+    export async function editCategory(idOrUuid, updates) {
+        const cat = await db.categories.get(idOrUuid);
+        if (!cat) throw new Error("Category not found");
+
+        const updated = {
+            ...cat,
+            ...updates,
+            fingerprint: makeCategoryFingerprint(
+                updates.name ?? cat.name,
+                updates.transactionType ?? cat.transactionType
+            ),
+            modifiedAt: new Date().toISOString(),
+            synced: 0
+        };
+
+        await db.categories.update(cat.id, updated);
+    }
+
+    export async function deleteCategory(idOrUuid) {
+        const cat = await db.categories.get(idOrUuid);
+        if (!cat) throw new Error("Category not found");
+
+        await db.categories.update(cat.id, {
+            deleted: 1,
+            modifiedAt: new Date().toISOString(),
+            synced: 0
+        });
+    }
+
+    export async function getActiveCategories() {
+        return db.categories.where("deleted").equals(0).toArray();
+    }
+
 
 //SETTINGS
 
 export async function loadDefaultSettings() {
     const settings = db.settings.toArray()
-    if (settings.length ==! 0) return;
+    if (settings.length !== 0) return;
     for (const [key, value] of Object.entries(defaultSettings)) {
         const existing = await db.settings.where('key').equals(key).first();
         if (existing) continue;

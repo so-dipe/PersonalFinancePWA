@@ -59,7 +59,11 @@
 }
 
 .notification.info {
-    background: var(--green-500)
+    background: var(--gray-700)
+}
+
+.notification.warning {
+    background: orange;
 }
 
 .dismiss-btn {

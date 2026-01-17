@@ -1,5 +1,11 @@
 <script>
-    import { db, loadDefaultCategories } from "$lib/db";
+    import {
+        loadDefaultCategories,
+        addCategory,
+        editCategory,
+        deleteCategory,
+        getActiveCategories
+    } from "$lib/db";
     import SettingsAccordion from "./SettingsAccordion.svelte";
     import { onMount } from "svelte";
     import { notify } from "$lib/notification/store";
@@ -14,41 +20,39 @@
 
     async function loadCategories() {
         try {
-            let cats = await db.categories.where('deleted').equals(0).toArray();
+            let cats = await getActiveCategories();
             if (cats.length === 0) {
                 await loadDefaultCategories();
-                cats = await db.categories.where('deleted').equals(0).toArray();
+                cats = await getActiveCategories();
             }
-            categories = cats;
+            categories = cats.sort((a, b) => {
+                if (a.transactionType !== b.transactionType) {
+                    return a.transactionType === "Income" ? -1 : 1;
+                }
+                return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+            });
         } catch (err) {
-            console.error("Failed to load categories:", err);
+            console.error(err);
             notify({ type: "error", message: "Failed to load categories" });
         }
     }
 
     onMount(loadCategories);
 
-    async function addCategory() {
+    async function addNewCategory() {
         if (!newName.trim()) return;
+
         try {
-            await db.categories.add({
-                uuid: crypto.randomUUID(),
-                name: newName.trim(),
-                transactionType: newType,
-                createdAt: new Date().toISOString(),
-                modifiedAt: new Date().toISOString(),
-                deleted: 0,
-                synced: 0
-            });
-            notify({ type: "success", message: `Category "${newName}" added`  });
-            newName = '';
-            newType = 'Expense';
+            await addCategory(newName.trim(), newType);
+            notify({ type: "success", message: `Category "${newName}" added` });
+            newName = "";
+            newType = "Expense";
             await loadCategories();
         } catch (err) {
-            console.error("Failed to add category:", err);
-            notify({ type: "error", message: "Failed to add category"  });
+            notify({ type: "error", message: "Category already exists" });
         }
     }
+
 
     function startEdit(cat) {
         editingId = cat.id;
@@ -57,19 +61,18 @@
     }
 
     async function saveEdit(cat) {
-        if (!editName.trim()) return; // prevent blank name
+        if (!editName.trim()) return;
+
         try {
-            await db.categories.update(cat.id, {
+            await editCategory(cat.id, {
                 name: editName.trim(),
-                transactionType: editType,
-                modifiedAt: new Date().toISOString(),
-                synced: 0
+                transactionType: editType
             });
-            notify({ type: "success", message: `Category "${editName}" updated` });
+            notify({ type: "success", message: "Category updated" });
             editingId = null;
             await loadCategories();
         } catch (err) {
-            notify({ type: "error", message: "Failed to update category"  });
+            notify({ type: "error", message: "Failed to update category" });
         }
     }
 
@@ -77,16 +80,13 @@
         editingId = null;
     }
 
-    async function deleteCategory(cat) {
+    async function removeCategory(cat) {
         if (!confirm(`Delete "${cat.name}"?`)) return;
+
         try {
-            await db.categories.update(cat.id, {
-                deleted: 1,
-                modifiedAt: new Date().toISOString(),
-                synced: 0
-            });
+            await deleteCategory(cat.id);
             categories = categories.filter(c => c.id !== cat.id);
-            notify({ type: "success", message: `Category "${cat.name}" deleted` });
+            notify({ type: "success", message: "Category deleted" });
         } catch (err) {
             notify({ type: "error", message: "Failed to delete category" });
         }
@@ -106,7 +106,7 @@
             <option>Expense</option>
         </select>
 
-        <button class="add-btn" on:click={addCategory}>Add</button>
+        <button class="add-btn" on:click={addNewCategory}>Add</button>
     </div>
 
     {#if categories.length === 0}
@@ -144,7 +144,7 @@
                 </div>
                 <div class="actions">
                     <button on:click={() => startEdit(cat)}>Edit</button>
-                    <button class="danger" on:click={() => deleteCategory(cat)}>Delete</button>
+                    <button class="danger" on:click={() => removeCategory(cat)}>Delete</button>
                 </div>
             {/if}
         </div>

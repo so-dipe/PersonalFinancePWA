@@ -214,7 +214,7 @@ export async function listTransactionEmails(query) {
     const response = await gapi.client.gmail.users.messages.list({
         userId: 'me',
         q: query,
-        maxResults: 100
+        maxResults: 20
     });
 
     return response.result?.messages ?? [];

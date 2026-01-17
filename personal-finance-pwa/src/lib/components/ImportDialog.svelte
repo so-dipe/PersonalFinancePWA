@@ -12,10 +12,6 @@
         if (dialog) dialog.showModal();
     });
 
-    // $: if (dialog) {
-    //     dialog.showModal();
-    // }
-
     function handleClose() {
         dialog.close();
         onClose?.();
@@ -42,6 +38,7 @@
         </p>
     </div>
 
+    <div class="table-wrapper">
     <table>
         <thead>
             <tr>
@@ -66,6 +63,7 @@
             {/each}
         </tbody>
     </table>
+    </div>
 
     <div class="actions">
         <button class="btn-secondary" on:click={handleClose}>
@@ -86,50 +84,49 @@
 
 <style>
     dialog {
+        display: flex;
+        flex-direction: column;
+
         border: none;
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-md);
         background: var(--bg-card);
         color: var(--text-main);
-        padding: var(--space-md);
-        max-width: 640px;
-        width: 90%;
+
+        width: min(640px, 90vw);
         max-height: 90vh;
-        overflow: auto;
-        position: fixed;
-        inset: 0;
-        margin: auto;
+
+        padding: 0;
     }
+
     
     dialog::backdrop {
         background: rgba(0, 0, 0, 0.5);
     }
 
     .dialog-head {
-        position: sticky;
-        top: 0;
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-subtle);
         background: var(--bg-card);
     }
 
-    table thead {
+    thead th {
         position: sticky;
-        top: 2;
+        top: 0;
+        z-index: 1;
+
         background: var(--bg-card);
+        border-bottom: 1px solid var(--border-subtle);
     }
 
     .actions {
-        position: sticky;
-        bottom: 0;
-
         display: flex;
         justify-content: flex-end;
         gap: 0.75rem;
 
-        padding-top: var(--space-sm);
-        padding-bottom: var(--space-sm);
-
-        background: var(--bg-card);
+        padding: var(--space-md);
         border-top: 1px solid var(--border-subtle);
+        background: var(--bg-card);
     }
 
     .actions button {
@@ -162,7 +159,7 @@
     }
 
     .btn-primary:hover:not(:disabled) {
-        background: var(--green-800);
+        background: var(--green-900);
     }
 
     .actions button:disabled {

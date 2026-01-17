@@ -1,6 +1,6 @@
 <script>
     import { addTransactionsBulk } from "$lib/db";
-    import { getTransactionsFromGmail } from "$lib/import-tx";
+    import { getTransactionsFromGmail } from "$lib/gmailImport";
     import { runImportPipeline } from "$lib/import/pipeline";
     import Accordion from "./Accordion.svelte";
     import ImportDialog from "./ImportDialog.svelte";

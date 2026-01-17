@@ -66,8 +66,8 @@
 
     <td class="actions">
         {#if isEditing}
-            <button class="save" on:click={onSave}>Save</button>
-            <button class="cancel" on:click={onCancel}>Cancel</button>
+            <button type="button" class="save" on:click={onSave}>Save</button>
+            <button type="button" class="cancel" on:click={onCancel}>Cancel</button>
         {:else}
             <button class="edit" on:click={onEdit}>Edit</button>
             <button class="danger" on:click={onDelete}>Delete</button>
