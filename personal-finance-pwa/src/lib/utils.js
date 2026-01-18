@@ -61,16 +61,35 @@ export function parseEmailBody(body) {
     return parsed;
 }
 
-export function excelDateToJSDate(excelDate) {
-    if (typeof excelDate !== 'number') {
-        const date = new Date(excelDate);
-        return !isNaN(date) ? date.toISOString().slice(0, 10) : null;
+export function normalizeToISODate(value) {
+    if (typeof value === 'number') {
+        const utcDays = Math.floor(value - 25569);
+        const date = new Date(utcDays * 86400 * 1000);
+        return date.toISOString().slice(0, 10);
     }
 
-    const utcDays = Math.floor(excelDate - 25569);
-    const utcValue = utcDays * 86400; 
-    return new Date(utcValue * 1000).toISOString().slice(0, 10);
+    // String or Date input
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10);
+    }
+
+    if (typeof value === 'string') {
+        // Handle DD/MM/YYYY explicitly (mobile-safe)
+        const dmyMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (dmyMatch) {
+            const [, d, m, y] = dmyMatch;
+            return new Date(Date.UTC(y, m - 1, d))
+                .toISOString()
+                .slice(0, 10);
+        }
+
+        const parsed = new Date(value);
+        return isNaN(parsed) ? null : parsed.toISOString().slice(0, 10);
+    }
+
+    return null;
 }
+
 
 export function getDefaultTransactionForm() {
     return {

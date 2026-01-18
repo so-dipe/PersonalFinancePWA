@@ -1,7 +1,7 @@
 <script>
     import { addTransaction, addTransactionsBulk } from '$lib/db';
     import { runImportPipeline } from '$lib/import/pipeline';
-    import { excelDateToJSDate } from '$lib/utils';
+    import { normalizeToISODate } from '$lib/utils';
     import { json } from '@sveltejs/kit';
     import * as XLSX from 'xlsx';
     import Accordion from './Accordion.svelte';
@@ -19,11 +19,15 @@
         file = event.target.files[0];
     }
 
+    function isCSV(file) {
+        return file.name.toLowerCase().endsWith('.csv');
+    }
+
     async function processRows(rows) {
         const raw = rows
             .filter(r => r.length >= 4)
             .map(r => ({
-                date: excelDateToJSDate(r[0]),
+                date: normalizeToISODate(r[0]),
                 transactionType: r[1] ?? 'expense',
                 description: r[2] || '',
                 amount: r[3] ?? 0,
@@ -44,28 +48,41 @@
         reader.onload = async (e) => {
             try {
                 loading = true;
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
 
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                const rows = hasHeader ? jsonData.slice(1): jsonData;
-                
-                if (!rows.length) throw new Error("No data found in the sheet.")
+                let rows = [];
+
+                if (isCSV(file)) {
+                    const text = e.target.result;
+                    const workbook = XLSX.read(text, { type: 'string' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                } else {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                }
+
+                rows = hasHeader ? rows.slice(1) : rows;
+
+                if (!rows.length) throw new Error("No data found");
 
                 await processRows(rows);
             } catch (err) {
-                notify({ type: "error", message: "❌Failed"})
+                console.error(err);
+                notify({ type: "error", message: "❌ Import failed" });
             } finally {
                 loading = false;
             }
-        }
+        };
 
-        reader.onerror = () => {
-            loading = false;
+        reader.onerror = () => (loading = false);
+
+        if (isCSV(file)) {
+            reader.readAsText(file);        // ✅ REQUIRED on mobile
+        } else {
+            reader.readAsArrayBuffer(file); // ✅ Excel only
         }
-        reader.readAsArrayBuffer(file);
     }
 
     function commitImport() {
@@ -114,8 +131,7 @@
     />
 {/if}
 
-<style>    
-    /* Instructions */
+<style>
     .import-instructions {
         background: var(--bg-main);
         border: 1px solid var(--gray-200);
