@@ -163,15 +163,13 @@
         border-radius: var(--radius-xs);
         border: 1px dashed var(--gray-200);
     }
-    
-    /* Form */
+
     .upload-form {
         display: flex;
         flex-direction: column;
         gap: var(--space-sm);
     }
-    
-    /* File input */
+
     .file-input {
         display: flex;
         align-items: center;
@@ -193,13 +191,6 @@
         justify-content: center;
         gap: 0.5rem;
         font-size: 0.85rem;
-    }
-
-    .actions {
-        display: flex;
-        justify-content: center;
-        gap: var(--space-sm);
-        margin-top: var(--space-sm);
     }
     
     button {

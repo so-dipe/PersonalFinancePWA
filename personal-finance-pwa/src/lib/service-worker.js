@@ -1,7 +1,7 @@
 import { build, files, version } from '$service-worker';
 
 const CACHE = `cache-${version}`;
-const ASSETS = [...build, ...files];
+const ASSETS = ['/', ...build, ...files];
 
 //INSTALL
 self.addEventListener('install', (event) => {
@@ -37,17 +37,27 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         (async () => {
             const cache = await caches.open(CACHE);
-            const cached = await cache.match(event.request);
 
+            // Try exact match first
+            const cached = await cache.match(event.request);
             if (cached) return cached;
 
-            const response = await fetch(event.request);
+            try {
+                const response = await fetch(event.request);
 
-            if (response.ok) {
-                cache.put(event.request, response.clone());
+                if (response.ok) {
+                    cache.put(event.request, response.clone());
+                }
+
+                return response;
+            } catch {
+                // 🔑 OFFLINE FALLBACK FOR SPA ROUTES
+                if (event.request.mode === 'navigate') {
+                    return cache.match('/');
+                }
+
+                throw new Error('Offline and no cache');
             }
-
-            return response;
         })()
     );
 });
