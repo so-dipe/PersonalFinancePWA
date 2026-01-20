@@ -101,7 +101,7 @@ export async function checkExistingFingerprints(fingerprints) {
     try {
         const rows = await db.transactions
             .where('fingerprint')
-            .anyof(fingerprints)
+            .anyOf(fingerprints)
             .toArray();
         return rows.map(r => r.fingerprint);
     } catch(e) {

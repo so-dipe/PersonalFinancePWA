@@ -34,21 +34,30 @@
     }
 
     async function processRows(rows) {
-        const rawCategory = (r[4] || '').trim().toLowerCase();
         const raw = rows
             .filter(r => r.length >= 4)
-            .map(r => ({
-                date: normalizeToISODate(r[0]),
-                transactionType: (r[1] ?? 'expense').toString().trim().toLowerCase(),
-                description: r[2] || '',
-                amount: r[3] ?? 0,
-                category: rawCategory ? categoryMap[rawCategory] ?? '__UNKNOWN__': null,
-                source: 'csv/excel'
-            }));
+            .map(r => {
+                const rawCategory = (r[4] || '').toString().trim().toLowerCase();
+
+                return {
+                    date: normalizeToISODate(r[0]),
+                    transactionType: (r[1] ?? 'expense')
+                        .toString()
+                        .trim()
+                        .toLowerCase(),
+                    description: r[2] || '',
+                    amount: r[3] ?? 0,
+                    category: rawCategory
+                        ? categoryMap[rawCategory] ?? '__UNKNOWN__'
+                        : null,
+                    source: 'csv/excel'
+                };
+            });
 
         transactions = await runImportPipeline(raw);
         showDialog = true;
     }
+
 
 
     function importFile() {
