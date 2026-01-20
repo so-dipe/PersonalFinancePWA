@@ -2,11 +2,11 @@
     import { driveToken, googleProfile, ensureDriveToken, fetchGoogleProfile } from "$lib/google";
     import { saveSettings, settings } from "$lib/settings/store";
     import { get } from "svelte/store"
-    import Settings from "$lib/components/Settings.svelte";
+    import Settings from "$lib/features/settings/Settings.svelte";
     import { db, useSetting, setSetting, getSetting } from "$lib/db";
     import { formatDateTime } from "$lib/utils";
     import { syncAll } from "$lib/sync/sync";
-    import { notify } from "$lib/notification/store";
+    import { notify } from "$lib/stores/store";
 
     const account = useSetting('account');
     const sync = useSetting('sync');

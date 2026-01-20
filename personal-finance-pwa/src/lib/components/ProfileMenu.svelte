@@ -1,8 +1,7 @@
 <script>
     import { goto } from "$app/navigation";
-    import { useSetting } from "$lib/db";
-    import { notify } from "$lib/notification/store";
-    import { settings } from "$lib/settings/store";
+    import { useSetting } from "$lib/domains/settings";
+    import { notify } from "$lib/stores/notification.store";
     export let sidebarOpen = false;
 
     function toggleSidebar() {

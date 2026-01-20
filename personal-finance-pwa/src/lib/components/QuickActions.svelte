@@ -1,62 +1,34 @@
 <script>
-    import { addTransaction, getFrequentTransactions } from '$lib/db';
+    import { getFrequentTransactions } from '$lib/domains/transactions';
     import { onMount, onDestroy, createEventDispatcher } from 'svelte';
     import { formatAmount } from '$lib/utils';
-    import { notify } from '$lib/notification/store';
+    import { notify } from '$lib/stores/notification.store';
+    import { readable } from 'svelte/store';
 
     const dispatch = createEventDispatcher();
 
-    let quickActions = [];
-    let loading = true;
-    let error = "";
-
-    let subscription;
-
-    async function loadQuickActions() {
-        try {
-            const txObservable = await getFrequentTransactions();
-            subscription = txObservable.subscribe({
-                next: (txs) => {
-                    quickActions = txs;
-                    loading = false;
-                },
-                error: (err) => {
-                    console.error(err);
-                    error = "Failed to load quick actions.";
-                    notify({ type: "error", message: error });
-                    loading = false;
-                }
-            });
-        } catch (err) {
-            console.error(err);
-            error = "Failed to load quick actions.";
-            notify({ type: "error", message: error });
-            loading = false;
-        }
-    }
+    const quickActions = readable([], (set) => {
+        const sub = getFrequentTransactions().subscribe({
+            next: (txs) => set(txs),
+            error: (e) => console.error(e)
+        });
+        return () => sub.unsubscribe();
+    })
 
     function handleSelect(tx) {
         dispatch('prefill', tx);
     }
-    
-    onMount(async () => {
-        loadQuickActions();
-    });
-
-    onDestroy(() => {
-        subscription?.unsubscribe?.();
-    });
 </script>
 
 <div class="card">
     <p class="text-muted mt-md">Quick Actions</p>
     <div class="quick-actions">
-        {#if quickActions.length === 0}
+        {#if $quickActions.length === 0}
             <p class="text-muted">No quick actions yet.</p>
         {:else}
-            {#each quickActions as tx}
+            {#each $quickActions as tx}
                 <button class="quick-action-btn" on:click={() => handleSelect(tx)}>
-                    {tx.description} - {tx.category} - {formatAmount(tx.amount)}
+                    {tx.description} - {tx.category} - {formatAmount(tx)}
                 </button>
             {/each}
         {/if}

@@ -2,9 +2,9 @@
     import { onMount } from 'svelte';
     import { loadGoogleApi } from '$lib/google';
     import { syncAll } from '$lib/sync/sync';
-    import TransactionForm from '$lib/components/TransactionForm.svelte';
-    import Transactions from '$lib/components/Transactions.svelte';
-    import { useSetting } from '$lib/db';
+    import TransactionForm from '$lib/features/transactions/TransactionForm.svelte';
+    import Transactions from '$lib/features/transactions/Transactions.svelte';
+    import { useSetting } from '$lib/domains/settings';
 
     let openSection = 'form';
     let bootstrapError = null;

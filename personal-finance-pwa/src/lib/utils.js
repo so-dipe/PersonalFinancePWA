@@ -32,13 +32,13 @@ export function formatFinancial(amount, isNegative = false) {
     return isNegative ? `( ${formatted} )` : formatted;
 }
 
-export function formatAmount(amount) {
-    if (!amount) return;
-    return amount.toLocaleString("en-NG", {
+export function formatAmount(tx) {
+    const formatted = tx.amount.toLocaleString("en-NG", {
         style: "decimal",
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })
+    return tx.transactionType === 'expense' ? `( ${formatted} )` : formatted
 }
 
 export function decodeBase64Url(base64UrlString) {
@@ -97,6 +97,14 @@ export function getDefaultTransactionForm() {
         transactionType: "Expense",
         description: "",
         amount: "",
-        category: ""
+        categoryUuid: ""
     }
+}
+
+export function isValidISODate(date) {
+    if (typeof date !== "string") return false;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+
+    const d = new Date(date);
+    return !Number.isNaN(d.getTime());
 }

@@ -1,6 +1,5 @@
 import { uploadFile, downloadFile, listDriveFiles } from "../google";
-import { db, getSetting, setSetting } from "../db";
-import { settings, saveSettings } from "$lib/settings/store";
+import { db } from "../db";
 import { get } from "svelte/store";
 
 async function updateLastSynced() {

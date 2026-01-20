@@ -1,5 +1,5 @@
 <script>
-    import { notifications } from "$lib/notification/store";
+    import { notifications } from "$lib/stores/notification.store";
     import { fly, fade } from "svelte/transition";
 </script>
 
