@@ -1,12 +1,11 @@
 <script>
     import { driveToken, googleProfile, ensureDriveToken, fetchGoogleProfile } from "$lib/google";
-    import { saveSettings, settings } from "$lib/settings/store";
     import { get } from "svelte/store"
     import Settings from "$lib/features/settings/Settings.svelte";
-    import { db, useSetting, setSetting, getSetting } from "$lib/db";
+    import { useSetting, getSetting } from "$lib/domains/settings";
     import { formatDateTime } from "$lib/utils";
     import { syncAll } from "$lib/sync/sync";
-    import { notify } from "$lib/stores/store";
+    import { notify } from "$lib/stores/notification.store";
 
     const account = useSetting('account');
     const sync = useSetting('sync');

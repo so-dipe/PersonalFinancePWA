@@ -1,10 +1,9 @@
 <script>
     import ManageCategories from './ManageCategories.svelte';
     import ToggleSwitch from '../../components/ToggleSwitch.svelte';
-    import { settings, saveSettings } from '$lib/settings/store';
     import { get } from 'svelte/store';
-    import { useSetting, getSetting, setSetting } from '$lib/db';
-    import { notify } from '$lib/stores/store';
+    import { useSetting, getSetting, setSetting } from '$lib/domains/settings';
+    import { notify } from '$lib/stores/notification.store';
 
     const syncSetting = useSetting("sync");
     const displaySetting = useSetting("display");

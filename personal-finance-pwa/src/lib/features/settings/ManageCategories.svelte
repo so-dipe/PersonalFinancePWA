@@ -1,14 +1,14 @@
 <script>
-    import {
+    import { 
         loadDefaultCategories,
         addCategory,
         editCategory,
         deleteCategory,
         getActiveCategories
-    } from "$lib/db";
+     } from "$lib/domains/categories";
     import SettingsAccordion from "./SettingsAccordion.svelte";
     import { onMount } from "svelte";
-    import { notify } from "$lib/stores/store";
+    import { notify } from "$lib/stores/notification.store";
 
     let categories = [];
     let editingId = null;
