@@ -94,7 +94,7 @@ export function normalizeToISODate(value) {
 export function getDefaultTransactionForm() {
     return {
         date: new Date().toISOString().slice(0, 10),
-        transactionType: "Expense",
+        transactionType: "expense",
         description: "",
         amount: "",
         categoryUuid: ""

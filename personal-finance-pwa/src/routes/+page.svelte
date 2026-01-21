@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { runSync } from '$lib/sync/runSync';
     import TransactionForm from '$lib/features/transactions/TransactionForm.svelte';
-    import Transactions from '$lib/features/transactions/Transactions.svelte';
+    import RecentTransactions from '$lib/features/transactions/RecentTransactions.svelte';
     import { useSetting } from '$lib/domains/settings';
 
     let openSection = 'form';
@@ -33,7 +33,7 @@
             <TransactionForm />
         </div>
         <div class="transactions-container">
-            <Transactions />
+            <RecentTransactions />
         </div>
     </div>
 </main>

@@ -63,3 +63,32 @@ export function useRecentTransactions(limit) {
         }));
     });
 }
+
+export function useTransactions() {
+    return liveQuery(async () => {
+        const [txs, categories] = await Promise.all([
+            db.transactions
+                .orderBy('date')
+                .reverse()
+                .filter(tx => tx.deleted === 0)
+                .toArray(),
+            db.categories
+                .where('deleted')
+                .equals(0)
+                .toArray()
+        ]);
+        const categoryMap = Object.fromEntries(
+            categories.map(c => [c.uuid, c.name])
+        );
+        return txs.map(tx => ({
+            id: tx.id,
+            uuid: tx.uuid,
+            date: tx.date,
+            transactionType: tx.transactionType,
+            description: tx.description,
+            amount: tx.amount,
+            category: categoryMap[tx.categoryUuid] ?? 'Unknown',
+            synced: tx.synced
+        }));
+    });
+}

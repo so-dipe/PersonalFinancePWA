@@ -1,5 +1,7 @@
 <script>
-    import { formatDate, formatFinancial } from "$lib/utils";
+    import { formatAmount, formatDate, formatFinancial } from "$lib/utils";
+    import { useSetting } from "$lib/domains/settings";
+    import { TRANSACTION_TYPE_LABELS } from "$lib/constants/constants";
 
     export let tx;
     export let isEditing = false;
@@ -10,6 +12,10 @@
     export let onSave;
     export let onCancel;
     export let onDelete;
+
+    const sync = useSetting('sync');
+
+    $: filteredCategories = editingTx?.transactionType ? categories?.filter((c) => c.transactionType === editingTx?.transactionType) : [];
 </script>
 
 <tr class={isEditing ? "editing" : ""}>
@@ -24,11 +30,11 @@
     <td>
         {#if isEditing}
             <select bind:value={editingTx.transactionType}>
-                <option value="Income">Income</option>
-                <option value="Expense">Expense</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
             </select>
         {:else}
-            {tx.transactionType}
+            {TRANSACTION_TYPE_LABELS[tx.transactionType]}
         {/if}
     </td>
 
@@ -44,17 +50,17 @@
         {#if isEditing}
             <input type="number" step="0.01" bind:value={editingTx.amount} />
         {:else}
-            <span class={tx.transactionType === "Income" ? "amount-positive" : "amount-negative"}>
-                {formatFinancial(tx.amount, tx.transactionType === "Expense")}
+            <span class={tx.transactionType === "income" ? "amount-positive" : "amount-negative"}>
+                {formatAmount(tx)}
             </span>
         {/if}
     </td>
 
     <td>
         {#if isEditing}
-            <select bind:value={editingTx.category}>
-                {#each categories as cat}
-                    <option value={cat.name}>{cat.name}</option>
+            <select bind:value={editingTx.categoryUuid}>
+                {#each filteredCategories as cat}
+                    <option value={cat.uuid}>{cat.name}</option>
                 {/each}
             </select>
         {:else}
@@ -62,7 +68,9 @@
         {/if}
     </td>
 
+    {#if $sync?.enabled}
     <td>{tx.synced ? "✅" : "☁️"}</td>
+    {/if}
 
     <td class="actions">
         {#if isEditing}

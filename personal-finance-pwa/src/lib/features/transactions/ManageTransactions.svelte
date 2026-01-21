@@ -5,50 +5,34 @@
     import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
     import { runSync } from "$lib/sync/runSync";
     import { db } from "$lib/db";
-    import { editTransaction, deleteTransaction } from "$lib/domains/transactions";
+    import { editTransaction, deleteTransaction, useTransactions } from "$lib/domains/transactions";
+    import { getActiveCategories } from "$lib/domains/categories";
     import { useSetting } from "$lib/domains/settings";
     import { notify } from "$lib/stores/notification.store";
     import TransactionRow from "./TransactionRow.svelte";
-    
-    let recentTransactions;
 
     let categories;
     let filteredCategories;
+
+    onMount(async () => {
+        categories = await getActiveCategories();
+        if (!categories.length) {
+            await loadDefaultCategories();
+            categories = await getActiveCategories();
+        }
+    });
 
     let editingTx = null;
 
     const sync = useSetting('sync');
 
-    onMount(async () => {
-        recentTransactions = readable([], (set) => {
-            const sub = liveQuery(() =>
-                db.transactions
-                    .orderBy("createdAt")
-                    .reverse()
-                    .filter(tx => tx.deleted === 0)
-                    .toArray()
-            ).subscribe({
-                next: set,
-                error: (err) => {
-                    console.error(err);
-                    notify({ type: "error", message: "Failed to load transactions." });
-                }
-            });
-            return () => sub.unsubscribe();
+    const transactions = readable([], (set) => {
+        const sub = useTransactions().subscribe({
+            next: set,
+            error: console.error
         });
-
-        try {
-            let cats = await db.categories.where("deleted").equals(0).toArray();
-            if (!cats.length) {
-                await loadDefaultCategories();
-                cats = await db.categories.where("deleted").equals(0).toArray();
-            }
-            categories = cats;
-        } catch (err) {
-            console.error(err);
-            notify({ type: "error", message: "Failed to load categories." });
-        }
-    });
+        return () => sub.unsubscribe();
+    })
 
     async function manualSync() {
         try {
@@ -84,7 +68,8 @@
             await editTransaction(editingTx.id, editingTx);
             notify({ type: "success", message: "✅Edited"});
             editingTx = null;
-        } catch (err) {
+        } catch (e) {
+            console.error("Edit Failed", e)
             notify({ type: "error", message: "❌Edit Failed"});
         }
     }
@@ -129,8 +114,6 @@
         notify({ type: "success", message: "CSV exported!" });
     }
 
-    $: filteredCategories = editingTx?.transactionType ? categories.filter((c) => c.transactionType === editingTx?.transactionType) : [];
-
 </script>
 
 <div class="card transactions-container">
@@ -154,17 +137,19 @@
                 <th>Description</th>
                 <th>Amount</th>
                 <th>Category</th>
-                <th>Synced</th>
+                {#if $sync?.enabled}
+                    <th>Synced</th>
+                {/if}
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {#if recentTransactions === undefined}
+            {#if !$transactions}
                 <tr><td colspan="7">Loading...</td></tr>
-            {:else if $recentTransactions.length === 0}
+            {:else if $transactions.length === 0}
                 <tr><td colspan="7">No transactions found.</td></tr>
             {:else}
-                {#each $recentTransactions as tx (tx.id)}
+                {#each $transactions as tx (tx.id)}
                     <TransactionRow
                         {tx}
                         isEditing={editingTx?.id === tx.id}
@@ -203,7 +188,7 @@ tbody td:nth-child(4) {
 .export-footer {
     position: sticky;
     bottom: 0;
-    background: white; /* match card background */
+    background: white;
     padding: 0.5rem;
     text-align: right;
     border-top: 1px solid #eee;

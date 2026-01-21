@@ -1,6 +1,6 @@
 import { getSetting, setSetting } from "$lib/domains/settings"
 import { SYNC_ENTITIES } from "./config"
-import { pullEntity } from "./pull"
+import { pullSession } from "./pull"
 import { pushEntity } from "./push"
 
 async function updateLastSynced() {
@@ -12,28 +12,14 @@ async function updateLastSynced() {
 }
 
 export async function syncAll(provider) {
-    const results = {};
+    let results = {};
+
+    results = await pullSession(provider.listFiles, provider.downloadFile)
 
     for (const entity of Object.keys(SYNC_ENTITIES)) {
-        const remoteFiles = await provider.listFiles(entity);
-
-        const pullResult = await pullEntity(
-            entity,
-            remoteFiles,
-            provider.downloadFile
-        );
-
-        const pushCount = await pushEntity(
-            entity,
-            provider.uploadFile
-        );
-
-        results[entity] = {
-            pulled: pullResult.pulled,
-            merged: pullResult.merged,
-            pushed: pushCount
-        };
+        await pushEntity(entity, provider.uploadFile);
     }
+
     await updateLastSynced();
 
     return results;

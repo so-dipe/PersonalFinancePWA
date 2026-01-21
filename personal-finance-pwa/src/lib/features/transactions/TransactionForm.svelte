@@ -72,10 +72,6 @@
             submitting = false;
         }
         runMicroSync("transactions");
-        // const autoSync = await getSetting("sync").then(s => s.autoSync);
-        // if (autoSync) {
-        //     microTaskSyncEntity("transactions")
-        // }
     }
 </script>
 

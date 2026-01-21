@@ -9,6 +9,7 @@
     import SettingsAccordion from "./SettingsAccordion.svelte";
     import { onMount } from "svelte";
     import { notify } from "$lib/stores/notification.store";
+    import { TRANSACTION_TYPE_LABELS } from "$lib/constants/constants";
 
     let categories = [];
     let editingId = null;
@@ -16,7 +17,7 @@
     let editType = '';
 
     let newName = '';
-    let newType = 'Expense';
+    let newType = 'expense';
 
     async function loadCategories() {
         try {
@@ -31,8 +32,8 @@
                 }
                 return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
             });
-        } catch (err) {
-            console.error(err);
+        } catch (e) {
+            console.error(e);
             notify({ type: "error", message: "Failed to load categories" });
         }
     }
@@ -46,7 +47,7 @@
             await addCategory(newName.trim(), newType);
             notify({ type: "success", message: `Category "${newName}" added` });
             newName = "";
-            newType = "Expense";
+            newType = "expense";
             await loadCategories();
         } catch (err) {
             notify({ type: "error", message: "Category already exists" });
@@ -102,8 +103,8 @@
             on:keydown={(e) => e.key === 'Enter' && addCategory()}
         />
         <select bind:value={newType}>
-            <option>Income</option>
-            <option>Expense</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
         </select>
 
         <button class="add-btn" on:click={addNewCategory}>Add</button>
@@ -124,8 +125,8 @@
                     on:keydown={(e) => e.key === 'Escape' && cancelEdit()}
                 />
                 <select bind:value={editType}>
-                    <option>Income</option>
-                    <option>Expense</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
                 </select>
                 <div class="actions">
                     <button class="save" on:click={() => saveEdit(cat)}>Save</button>
@@ -136,10 +137,10 @@
                     <strong>{cat.name}</strong>
                     <span 
                         class="badge" 
-                        class:income={cat.transactionType === 'Income'} 
-                        class:expense={cat.transactionType === 'Expense'}
+                        class:income={cat.transactionType === 'income'} 
+                        class:expense={cat.transactionType === 'expense'}
                     >
-                        {cat.transactionType}
+                        {TRANSACTION_TYPE_LABELS[cat.transactionType]}
                     </span>
                 </div>
                 <div class="actions">

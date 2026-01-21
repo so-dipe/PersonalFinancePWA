@@ -73,9 +73,20 @@
 
                 if (isCSV(file)) {
                     const text = e.target.result;
-                    const clean = text.replace(/^\uFEFF/, '').trim();const parsed = Papa.parse(clean, { skipEmptyLines: true });
+                    const clean = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
+                    const parsed = Papa.parse(clean, {
+                        skipEmptyLines: true,
+                        dynamicTyping: true,
+                        error: (e) => console.warn("Papa parse error", e)
+                    });
                     if (parsed.errors.length) {
-                        throw new Error("CSV parsing failed");
+                        console.warn("CSV parsing issues: ", parsed.errors);
+                        rows = Papa.parse(clean, {
+                            skipEmptyLines: true,
+                            relaxColumnCount: true
+                        }).data;
+                    } else {
+                        rows = parsed.data;
                     }
                     rows = parsed.data;
                 } else {
@@ -87,10 +98,10 @@
 
                 if (!rows.length || rows.every(r => r.length === 0)) {
                     notify({ type: "error", message: "No rows detected."})
-                    throw new Error("Parsed file contains no rows.")
+                    return;
                 } else if (hasHeader && rows.length === 1) {
                     notify({ type: "error", message: "File only contains a header row."});
-                    throw new Error("File only contains a header row");
+                    return;
                 }
 
                 rows = hasHeader ? rows.slice(1) : rows;
@@ -100,7 +111,7 @@
                 await processRows(rows);
             } catch (e) {
                 console.error(e);
-                notify({ type: "error", message: "❌ Import failed" });
+                notify({ type: "error", message: `Import failed: ${e}` });
             } finally {
                 loading = false;
             }

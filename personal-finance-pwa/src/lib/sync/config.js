@@ -6,5 +6,8 @@ export const SYNC_ENTITIES = {
     categories: {
         store: 'categories',
         dedupeByFingerprint: true
+    },
+    settings : {
+        store: 'settings'
     }
 }

@@ -1,6 +1,5 @@
 export class Transaction {
     constructor({
-        id,
         uuid,
         date,
         transactionType,
@@ -9,7 +8,6 @@ export class Transaction {
         categoryUuid,
         source = 'manual'
     }) {
-        this.id = id;
         this.uuid = uuid ?? crypto.randomUUID();
         this.date = date;
         this.transactionType = transactionType;

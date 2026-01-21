@@ -1,3 +1,5 @@
+import { db } from "$lib/db";
+
 export async function reconcileByFingerprint(entity, remoteItem) {
     if (!remoteItem.fingerprint) return null;
 

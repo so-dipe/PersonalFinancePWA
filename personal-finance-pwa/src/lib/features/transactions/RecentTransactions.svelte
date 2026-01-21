@@ -9,6 +9,8 @@
     import { TRANSACTION_TYPE_LABELS, TRANSACTIONS_LIMIT } from "$lib/constants/constants";
     import { useRecentTransactions } from "$lib/domains/transactions";
 
+    let syncing = false;
+
     const recentTransactions = readable([], (set) => {
         const sub = useRecentTransactions(TRANSACTIONS_LIMIT).subscribe({
             next: set,
@@ -19,8 +21,15 @@
 
     const sync = useSetting('sync');
 
-    function manualSync() {
-        runSync();
+    async function manualSync() {
+        try {
+            syncing = true;
+            await runSync();
+        } catch (e) {
+            console.error("Sync Failed!", e)
+        } finally {
+            syncing = false;
+        }
     }
 </script>
 
@@ -29,9 +38,9 @@
         Recent Transactions
         {#if $sync?.enabled}
         <small>
-            (<button class="sync-status" on:click={manualSync}>
-                Last synced: {formatDateTime(new Date($sync?.lastSync))}
-            </button>)
+            <button class="sync-status" on:click={manualSync} disabled={syncing}>
+                ({syncing ? "Syncing..." : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}`})
+            </button>
         </small>
         {/if}
     </h3>
@@ -49,10 +58,10 @@
         </thead>
         <tbody>
             {#if !recentTransactions}
-                <tr><td colspan="5">Loading...</td></tr>
+                <tr><td colspan="6">Loading...</td></tr>
             {:else}
                 {#if $recentTransactions?.length === 0}
-                    <tr><td colspan="5">No transactions found.</td></tr>
+                    <tr><td colspan="6">No transactions found.</td></tr>
                 {:else}
                     {#each $recentTransactions as tx}
                         <tr>
@@ -61,7 +70,11 @@
                             <td>{tx.description}</td>
                             <td class={tx.transactionType === "income" ? "amount-positive": "amount-negative"}>{formatAmount(tx)}</td>
                             <td>{tx.category}</td>
-                            <td>{tx.synced ? "✅" : "☁️"}</td>
+                            <td>
+                                {#if $sync?.enabled}
+                                    {tx.synced ? "✅" : "☁️"}
+                                {/if}
+                            </td>
                         </tr>
                     {/each}
                 {/if}
@@ -72,6 +85,11 @@
 </div>
 
 <style>
+    .sync-status {
+        border: none;
+        background: none;
+    }
+
     tbody td:nth-child(4) {
         text-align: right;
     }
