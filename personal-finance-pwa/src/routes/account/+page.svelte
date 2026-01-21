@@ -1,60 +1,81 @@
 <script>
-    import { driveToken, googleProfile, ensureDriveToken, fetchGoogleProfile } from "$lib/google";
-    import { get } from "svelte/store"
     import Settings from "$lib/features/settings/Settings.svelte";
-    import { useSetting, getSetting } from "$lib/domains/settings";
+    import { useSetting, getSetting, setSetting } from "$lib/domains/settings";
     import { formatDateTime } from "$lib/utils";
-    import { syncAll } from "$lib/sync/sync";
+    import { runSync } from "$lib/sync/runSync";
     import { notify } from "$lib/stores/notification.store";
+    import { cloudStorageProviders } from "$lib/providers";
+    import { CLOUD_STORAGE_PROVIDERS_NAME_MAP } from "$lib/constants/constants";
+    import { get } from "svelte/store";
+    import { DEFAULT_SETTINGS } from "$lib/constants/default.settings";
 
     const account = useSetting('account');
     const sync = useSetting('sync');
 
+    let selectedProvider = $sync?.provider || "google";
+    $: provider = selectedProvider ? cloudStorageProviders[selectedProvider] : null;
+
     let isConnecting = false;
     let isSyncing = false;
 
-    async function connectGoogleDrive() {
+    async function connectProvider() {
+        if (!provider) return;
         isConnecting = true;
         try {
-            const token = await ensureDriveToken({interactive: false}) ?? await ensureDriveToken({interactive: true});
-            if (!token) return;
-
-            await fetchGoogleProfile();
-            const profile = get(googleProfile);
-
-            if (profile) {
-                const accountSetting = await getSetting('account');
-                await setSetting('account', {
-                    ...accountSetting,
-                    ...profile,
-                    setBy: 'google'
-                })
-            };
-
-            const currentSync = await getSetting("sync");
+            const profile = await provider.connect();
+            const currentSync = await getSetting('sync');
             await setSetting('sync', {
                 ...currentSync,
-                enabled: true
+                enabled: true,
+                provider: selectedProvider
             });
+
+            if (!profile) return;
+            const accountSetting = await getSetting('account');
+            if (accountSetting.setBy === "user") return;
+            await setSetting('account', {
+                ...accountSetting,
+                ...profile,
+                setBy: selectedProvider
+            });
+        } catch (e) {
+            console.error(`An error occured while connecting to ${selectedProvider}:`, e)
+            notify({type: "error", message: `An error occured while connecting to ${CLOUD_STORAGE_PROVIDERS_NAME_MAP[selectedProvider]}: ${e}`})
         } finally {
             isConnecting = false;
         }
     }
 
-    async function disconnectGoogle() {
-        localStorage.removeItem('g_token_drive');
-        localStorage.removeItem('g_token_drive');
-        driveToken.set(null);
+    async function disconnectProvider() {
+        const currentSync = await getSetting("sync");
+        if (!currentSync.provider) return;
 
-        const currentSync = await getSetting('sync');
-        await setSetting('sync', { ...currentSync, enabled: false });
+        const provider = cloudStorageProviders[currentSync.provider];
+
+        if (provider?.disconnect) {
+            await provider.disconnect();
+        }
+
+        await setSetting('sync', {
+            ...currentSync,
+            enabled: false,
+            autoSync: false
+        });
+
+        const accountSetting = await getSetting('account');
+        if (accountSetting.setBy === currentSync.provider) {
+            await setSetting('account', {
+                ...accountSetting,
+                ...DEFAULT_SETTINGS['account']
+            });
+        }
     }
 
     async function manualSync() {
         if (isSyncing) return;
         isSyncing = true;
         try{
-            await syncAll();
+            await runSync();
             notify({ type: "success", message: "Synced!🎉"})
         } catch (err) {
             notify({ type: "error", message: "Sync Failed.❌"})
@@ -62,7 +83,7 @@
             isSyncing = false;
         }
     }
-    $: connectionStatus = $sync?.enabled ? `Connected as ${$account?.name}` : "Not Connected"
+    $: connectionStatus = $sync?.enabled ? `Connected to ${CLOUD_STORAGE_PROVIDERS_NAME_MAP[$sync?.provider]} as ${$account?.name}` : "Not Connected"
 </script>
 
 <div class="account-page">
@@ -74,10 +95,15 @@
                 {connectionStatus}
                 {#if $sync?.enabled}
                     &nbsp; | &nbsp;
-                    <a class="disconnect-link" on:click={disconnectGoogle}>Disconnect</a>
+                    <a class="disconnect-link" on:click={disconnectProvider}>Disconnect</a>
                 {:else}
-                    <a class="connect-link" on:click={connectGoogleDrive}>{isConnecting ? "Connecting...": "Connect to Google Drive"}</a>
+                    <a class="connect-link" on:click={connectProvider}>{isConnecting ? "Connecting...": `Connect to ${CLOUD_STORAGE_PROVIDERS_NAME_MAP[selectedProvider] || "Provider"}`}</a>
                 {/if}
+                <select bind:value={selectedProvider} disabled={$sync?.enabled}>
+                    {#each Object.keys(cloudStorageProviders) as key}
+                        <option value={key}>{CLOUD_STORAGE_PROVIDERS_NAME_MAP[key]}</option>
+                    {/each}
+                </select>
                 <br>
                 <a class="sync-status" on:click={manualSync}>
                     {$sync?.enabled 

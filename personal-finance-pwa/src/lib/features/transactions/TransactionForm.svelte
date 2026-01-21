@@ -3,7 +3,7 @@
     import { getSetting } from "$lib/domains/settings";
     import { addTransaction } from "$lib/domains/transactions";
     import { errorToNotification } from "$lib/stores/notification.mapper";
-    import { microTaskSyncEntity } from "$lib/sync/sync";
+    import { runMicroSync } from "$lib/sync/runSync";
     import { getDefaultTransactionForm } from "$lib/utils";
     import { onMount } from "svelte";
     import QuickActions from "$lib/components/QuickActions.svelte";
@@ -71,10 +71,11 @@
         } finally {
             submitting = false;
         }
-        const autoSync = await getSetting("sync").then(s => s.autoSync);
-        if (autoSync) {
-            microTaskSyncEntity("transactions")
-        }
+        runMicroSync("transactions");
+        // const autoSync = await getSetting("sync").then(s => s.autoSync);
+        // if (autoSync) {
+        //     microTaskSyncEntity("transactions")
+        // }
     }
 </script>
 

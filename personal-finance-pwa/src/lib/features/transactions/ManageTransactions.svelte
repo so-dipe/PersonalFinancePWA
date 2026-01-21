@@ -3,9 +3,11 @@
     import { readable } from "svelte/store";
     import { liveQuery } from "dexie";
     import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
-    import { syncAll } from "$lib/sync/sync";
-    import { db, deleteTransaction, editTransaction, useSetting } from "$lib/db";
-    import { notify } from "$lib/stores/store";
+    import { runSync } from "$lib/sync/runSync";
+    import { db } from "$lib/db";
+    import { editTransaction, deleteTransaction } from "$lib/domains/transactions";
+    import { useSetting } from "$lib/domains/settings";
+    import { notify } from "$lib/stores/notification.store";
     import TransactionRow from "./TransactionRow.svelte";
     
     let recentTransactions;
@@ -50,7 +52,7 @@
 
     async function manualSync() {
         try {
-            await syncAll();
+            await runSync();
             notify({ type: "success", message: "✅Sync completed" });
         } catch (err) {
             console.error(err);

@@ -1,14 +1,11 @@
 <script>
     import { onMount } from 'svelte';
-    import { loadGoogleApi } from '$lib/google';
-    import { syncAll } from '$lib/sync/sync';
+    import { runSync } from '$lib/sync/runSync';
     import TransactionForm from '$lib/features/transactions/TransactionForm.svelte';
     import Transactions from '$lib/features/transactions/Transactions.svelte';
     import { useSetting } from '$lib/domains/settings';
 
     let openSection = 'form';
-    let bootstrapError = null;
-    let loading = true;
 
     const syncSetting = useSetting('sync');
 
@@ -17,40 +14,20 @@
     }
 
     async function bootstrapApp() {
-        loading = true;
-        bootstrapError = null;
         try {
-            await loadGoogleApi();
-
             if (!syncSetting.enabled) return;
-
             if (syncSetting.autoSync) {
-                await syncAll();
+                await runSync();
             }
         } catch (err) {
             console.error("Bootstrap failed:", err)
-            bootstrapError = "Failed to initialize app. Please refresh.";
-        } finally {
-            loading = false;
         }
-    }
-
-    function retryBootstrap() {
-        bootstrapApp();
     }
 
     onMount(bootstrapApp);
 </script>
 
 <main class="page">
-    {#if loading}
-        <div class="card info">Loading application...</div>
-    {/if}
-
-    {#if bootstrapError}
-        <div class="card error">{bootstrapError}</div>
-        <button class="retry-btn" on:click={retryBootstrap}>Retry</button>
-    {/if}
     <div class="page-grid">
         <div class="card">
             <TransactionForm />

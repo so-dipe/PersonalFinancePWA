@@ -4,7 +4,7 @@
     import { liveQuery } from "dexie";
     import { db } from "$lib/db";
     import { formatDate, formatDateTime, formatAmount } from "$lib/utils";
-    import { syncAll } from "$lib/sync/sync";
+    import { runSync } from "$lib/sync/runSync";
     import { useSetting } from "$lib/domains/settings";
     import { TRANSACTION_TYPE_LABELS, TRANSACTIONS_LIMIT } from "$lib/constants/constants";
     import { useRecentTransactions } from "$lib/domains/transactions";
@@ -20,7 +20,7 @@
     const sync = useSetting('sync');
 
     function manualSync() {
-        syncAll();
+        runSync();
     }
 </script>
 

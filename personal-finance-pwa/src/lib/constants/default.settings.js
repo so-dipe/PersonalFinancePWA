@@ -2,7 +2,8 @@ export const DEFAULT_SETTINGS = {
     sync: {
         enabled: false,
         autoSync: false,
-        lastSync: "1970-01-01"
+        lastSync: "1970-01-01",
+        provider: ""
     },
     
     account: {

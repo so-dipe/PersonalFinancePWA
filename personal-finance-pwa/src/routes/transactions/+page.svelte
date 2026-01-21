@@ -1,5 +1,5 @@
 <script>
-    import ManageTransactions from "$lib/components/ManageTransactions.svelte";
+    import ManageTransactions from "$lib/features/transactions/ManageTransactions.svelte";
 </script>
 
 <ManageTransactions />

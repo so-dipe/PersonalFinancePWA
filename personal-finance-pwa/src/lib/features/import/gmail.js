@@ -1,4 +1,4 @@
-import { constructEmailQuery, listTransactionEmails, getEmailContent, ensureGmailToken } from "$lib/google";
+import { constructEmailQuery, listTransactionEmails, getEmailContent, ensureGmailToken } from "$lib/providers/google/gmail";
 
 function parseTransactionEmail(body, date, sender) {
     const amountMatch = body.match(/NGN\s?([\d,]+\.\d{2})/);
