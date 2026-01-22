@@ -1,19 +1,16 @@
 {
-  "name": "Personal Finance Tracker",
-  "short_name": "Finance",
+  "name": ".kobo",
+  "short_name": ".kobo",
+  "description": "kobo - ...every naira counts.",
+  "version": "0.0.1",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ff3e00",
+  "background_color": "#cbddd1",
+  "theme_color": "#007744",
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
+      "src": "3.png",
+      "sizes": "500x500",
       "type": "image/png"
     }
   ]

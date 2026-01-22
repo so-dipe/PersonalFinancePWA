@@ -32,7 +32,7 @@
     <nav class="flex-col">
         <button on:click={() => navigate('/')}>add</button>
         <button on:click={() => navigate('/transactions')}>transactions</button>
-        <button on:click={() => navigate('/', true)} disabled>budget</button>
+        <button on:click={() => navigate('/budget', true)} disabled>budget</button>
         <button on:click={() => navigate('/', true)} disabled>analytics</button>
         <button on:click={() => navigate('/account')}>account</button>
     </nav>

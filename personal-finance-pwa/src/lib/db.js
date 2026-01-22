@@ -42,7 +42,7 @@ db.version(1).stores({
     budgets: `
         ++id,
         uuid,
-        categoryId,
+        categoryUuid,
         amount,
         periodUnit,
         periodCount,
