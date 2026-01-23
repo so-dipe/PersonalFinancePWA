@@ -3,7 +3,6 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import ProfileMenu from "$lib/components/ProfileMenu.svelte";
     import Notifications from "$lib/components/Notifications.svelte";
-    import { onMount } from "svelte";
 
 
     let sidebarOpen = false;
@@ -16,15 +15,6 @@
     function closeSidebar() {
         sidebarOpen = false;
     }
-    
-    onMount(() => {
-            const onScroll = () => {
-                window.scrollY > 40;
-            };
-
-        window.addEventListener('scroll', onScroll);
-        return () => window.removeEventListener('scroll', onScroll);
-    });
 </script>
 
 
@@ -37,8 +27,10 @@
 
 
 <div class="app">
-    <header class="app-header {scrolled ? 'scrolled' : ''}">
-        <a href="/" class="logo">kobo</a>
+    <header class="app-header">
+        <div class="center">
+            <span class="app-logo">kobo</span>
+        </div>
     </header>
     <Notifications />
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
@@ -48,54 +40,20 @@
 </div>
 
 <style>
-.app-header {
-    position: sticky;
-    top: 12px;
-    z-index: 10;
-
-    display: flex;
-    justify-content: center;
-    
-    pointer-events: none;
+.center {
+  display: flex;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--green-900);
+  pointer-events: none; /* subtle, non-interactive */
 }
 
-.logo {
-    pointer-events: auto;
-
-    display: inline-flex;
-    align-items: center;
-
-    padding: 10px 18px;
-
-    border-radius: 999px;
-
-    font-size: 2rem;
-    font-weight: 900;
-    text-decoration: none;
-    color: inherit;
-
-    background: var(--bg-main);
-    box-shadow: var(--shadow-sm);
-
-    transition:
-        font-size 200ms ease,
-        padding 200ms ease,
-        transform 200ms ease,
-        box-shadow 200ms ease;
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
 }
 
-
-/* Scrolled state */
-.app-header.scrolled {
-    height: 48px;
-    padding: 0 var(--space-md);
-    justify-content: flex-start;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-}
-
-
-.app-header.scrolled .logo {
-    font-size: 1.1rem;
-    transform: translateX(12px);
-}
 </style>

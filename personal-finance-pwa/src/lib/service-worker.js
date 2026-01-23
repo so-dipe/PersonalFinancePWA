@@ -1,63 +1,56 @@
 import { build, files, version } from '$service-worker';
 
-const CACHE = `cache-${version}`;
+const CACHE_NAME = `kobo-cache-${version}`;
 const ASSETS = ['/', ...build, ...files];
 
-//INSTALL
+// INSTALL
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE).then((cache) => cache.addAll(ASSETS))
-    );
-    self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
+  self.skipWaiting();
 });
 
-//ACTIVATE
+// ACTIVATE
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        (async () => {
-            const keys = await caches.keys();
-            for (const key of keys) {
-                if (key !== CACHE) {
-                    await caches.delete(key);
-                }
-            }
-            self.clients.claim();
-        })()
-    );
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      for (const key of keys) {
+        if (key !== CACHE_NAME) await caches.delete(key);
+      }
+      self.clients.claim();
+    })()
+  );
 });
 
-//FETCH
+// FETCH
 self.addEventListener('fetch', (event) => {
-    if (event.request.method !== 'GET') return;
+  if (event.request.method !== 'GET') return;
 
-    const url = new URL(event.request.url);
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
-    if (url.origin !== self.location.origin) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
 
-    event.respondWith(
-        (async () => {
-            const cache = await caches.open(CACHE);
+    // Try cache first
+    const cachedResponse = await cache.match(event.request);
+    if (cachedResponse) return cachedResponse;
 
-            // Try exact match first
-            const cached = await cache.match(event.request);
-            if (cached) return cached;
-
-            try {
-                const response = await fetch(event.request);
-
-                if (response.ok) {
-                    cache.put(event.request, response.clone());
-                }
-
-                return response;
-            } catch {
-                // 🔑 OFFLINE FALLBACK FOR SPA ROUTES
-                if (event.request.mode === 'navigate') {
-                    return cache.match('/');
-                }
-
-                throw new Error('Offline and no cache');
-            }
-        })()
-    );
+    try {
+      const networkResponse = await fetch(event.request);
+      if (networkResponse && networkResponse.ok) {
+        cache.put(event.request, networkResponse.clone());
+      }
+      return networkResponse;
+    } catch (err) {
+      // SPA fallback for offline navigation
+      if (event.request.mode === 'navigate') {
+        const fallback = await cache.match('/');
+        if (fallback) return fallback;
+      }
+      throw err;
+    }
+  })());
 });

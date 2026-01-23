@@ -1,32 +1,82 @@
 <script>
-    import { BUDGET_PERIODS } from "$lib/constants/constants";
     import { getCurrentBudgetWindow } from "$lib/domains/budgets";
-    import { createEventDispatcher } from "svelte";
-    import { get } from "svelte/store";
+    import { getTransactionsByCategory } from "$lib/domains/transactions";
+    import { createEventDispatcher, onDestroy } from "svelte";
+    import BudgetProgress from "./BudgetProgress.svelte";
+    import BudgetForm from "./BudgetForm.svelte";
+    import BudgetSummary from "./BudgetSummary.svelte";
 
     const dispatch = createEventDispatcher();
 
+    /* ---------------- props ---------------- */
     export let budget;
     export let mode = "view";
     export let categories = [];
 
+    /* ---------------- local state ---------------- */
     let draft = {};
+    let transactions = [];
+    let unsubscribe; // for liveQuery cleanup
 
-    $: if (budget) {
+    let txSubscription;
+
+    /* ---------------- derived state ---------------- */
+
+    // source of truth depends on mode
+    $: source = mode === "view" ? budget : draft;
+
+    // budget window
+    $: ({ start, end } = source?.startDate
+        ? getCurrentBudgetWindow(
+            source.startDate,
+            source.periodUnit,
+            source.periodCount
+        )
+        : { start: "", end: "" });
+
+    // category info
+    $: category = categories.find(c => c.uuid === source?.categoryUuid);
+    $: categoryName = category?.name ?? "";
+    $: categoryTransactionType = category?.transactionType ?? "";
+
+    // progress calculation
+    $: progressPercent = budget?.amount
+        ? Math.round(
+                transactions.reduce((sum, t) => sum + t.amount, 0) /
+                budget.amount *
+                100
+            )
+        : 0;
+
+    /* ---------------- side effects ---------------- */
+
+    // clone budget into draft
+    $: if (budget && mode === "edit") {
         draft = structuredClone(budget);
     }
-    $: source = mode === 'view' ? budget : draft;
 
-    $: ({start, end} = source?.startDate ? getCurrentBudgetWindow(
-        source.startDate, 
-        source.periodUnit, 
-        source.periodCount
-    ) : { start: "", end: "" });
-    
-    $: category = categories.find(c => c.uuid === source?.categoryUuid);
-    $: categoryName = categories?.name ?? "";
-    $: categoryTransactionType = categories?.transactionType ?? "";
+    // liveQuery subscription (reacts to category + date window)
+    $: subscriptionKey = budget?.categoryUuid && start && end
+    ? `${budget.categoryUuid}-${start}-${end}`
+    : null;
 
+    $: if (subscriptionKey) {
+        txSubscription?.unsubscribe();
+
+        txSubscription = getTransactionsByCategory(
+            budget.categoryUuid,
+            start,
+            end
+        ).subscribe(txs => {
+            transactions = txs;
+        });
+    }
+
+    onDestroy(() => {
+        txSubscription?.unsubscribe();
+    });
+
+    /* ---------------- events ---------------- */
     function save() {
         dispatch("save", draft);
     }
@@ -42,68 +92,34 @@
     function del() {
         dispatch("delete", budget);
     }
-    
 </script>
 
-<div class="budget-card {mode}">
+
+<div class="budget-card {mode} {categoryTransactionType}" on:click={mode === 'view' ? edit : null}>
     <div class="strip {categoryTransactionType}"></div>
+
     <div class="content">
         {#if mode === "view"}
-        <div class="summary">
-            <strong>{categoryName}</strong>
-            <span class="text-muted">{budget.description}</span>
-            <span class="amount">{budget.amount}</span>
-        </div>
-        <div class="period text-muted">
-            {start} ➡️ {end}
-        </div>
+            <BudgetSummary
+                {budget}
+                categoryName={categoryName}
+                transactionType={categoryTransactionType}
+                start={start}
+                end={end}
+                on:edit={() => dispatch('edit', budget)}
+                on:delete={() => dispatch('delete', budget)}
+            />
+            <BudgetProgress percent={progressPercent} type={categoryTransactionType} />            
         {:else}
-        <div class="form-grid">
-            <label>
-                Category
-                <select bind:value={draft.categoryUuid}>
-                    {#each categories as cat}
-                        <option value={cat.uuid}>{cat.name}</option>
-                    {/each}
-                </select>
-            </label>
-            <label>
-                Description
-                <input type="text" bind:value={draft.description} />
-            </label>
-            <label>
-                Amount
-                <input type="number" bind:value={draft.amount} min="0.01" step="0.01"/>
-            </label>
-            <label>
-                Start Date
-                <input type="date" bind:value={draft.startDate} />
-            </label>
-            <label>
-                Period
-                <select bind:value={draft.periodUnit}>
-                    {#each Object.entries(BUDGET_PERIODS) as [period, periodName]}
-                        <option value={period}>{periodName}</option>
-                    {/each}
-                </select>
-            </label>
-            <label>
-                Period Count
-                <input type="number" bind:value={draft.periodCount} min="1" max="10" step="1" />
-            </label>
-            <div class="period-preview text-muted">
-                {start} ➡️ {end}
-            </div>
-        </div>
-        {/if}
-    </div>
-    <div class="actions">
-        {#if mode === "view"}
-            <button on:click={edit}>Edit</button>
-            <button class="danger" on:click={del}>Delete</button>
-        {:else}
-            <button class="primary" on:click={save}>Save</button>
-            <button on:click={cancel}>Cancel</button>
+            <!-- Edit mode form -->
+            <BudgetForm
+                {draft}
+                {categories}
+                {start}
+                {end}
+                on:save={(e) => dispatch("save", e.detail)}
+                on:cancel={cancel}
+            />
         {/if}
     </div>
 </div>
@@ -117,14 +133,13 @@
     grid-template-columns: 6px 1fr auto;
     gap: var(--space-md);
     padding: var(--space-md);
+    cursor: default;
+    transition: box-shadow 0.2s;
 }
 
-.strip.income {
-    background: var(--green-500);
-}
-
-.strip.expense {
-    background: var(--red-500);
+.budget-card.view:hover {
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
 }
 
 .content {
@@ -133,49 +148,12 @@
     gap: var(--space-sm);
 }
 
-.summary {
-    display: flex;
-    gap: var(--space-md);
-    align-items: center;
+.budget-card.income {
+    border-left: 2px solid var(--green-500);
 }
 
-.amount {
-    margin-left: auto;
-    font-weight: 600;
+.budget-card.expense {
+    border-left: 2px solid var(--red-500);
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-md);
-}
-
-.form-grid label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.85rem;
-    gap: var(--space-xs);
-}
-
-.period-preview {
-    grid-column: span 2;
-}
-
-.actions {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.actions button.primary {
-    background: var(--green-700);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 0.5rem 0.75rem;
-}
-
-.actions button.danger {
-    color: var(--red-700);
-}
 </style>

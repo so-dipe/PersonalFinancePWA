@@ -11,7 +11,10 @@ const config = {
 			assets: 'build',
 			fallback: 'index.html'
 		}),
-		serviceWorker: { register: true }
+		serviceWorker: { 
+			register: true,
+			files: (filepath) => !/\.DS_Store/.test(filepath)
+		 }
 	}
 };
 

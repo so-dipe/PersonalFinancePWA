@@ -9,36 +9,21 @@
     const syncSetting = useSetting('sync');
 </script>
 
-<main class="page">
+<div class="page">
     <div class="page-grid">
         <div class="card">
             <ManageBudget />
         </div>
-        <div class="card">
-        </div>
     </div>
-</main>
+</div>
 
 <style>
 .page {
     padding: var(--space-lg);
     animation: fadeIn 0.3s ease;
-}
-
-.page-grid {
-    display: grid;
-    gap: var(--space-lg);
-}
-
-@media (min-width: 768px) {
-    .page-grid {
-        grid-template-columns: repeat(2, 1fr);
-        align-items: start;
-    }
-}
-
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
 }
 </style>

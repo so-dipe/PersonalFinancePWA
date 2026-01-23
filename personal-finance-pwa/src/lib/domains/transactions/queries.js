@@ -92,3 +92,23 @@ export function useTransactions() {
         }));
     });
 }
+
+export function getTransactionsByCategory(categoryUuid, start, end) {
+    return liveQuery(() => {
+        let txs = db.transactions
+            .filter(tx => tx.deleted === 0)
+            .filter(tx => tx.categoryUuid === categoryUuid);
+        
+        if (start && end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            
+            txs = txs.and(tx => {
+                const date = new Date(tx.date);
+                return date >= startDate && date <= endDate;
+            });
+        }
+
+        return txs.toArray()
+    });
+}

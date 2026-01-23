@@ -56,6 +56,7 @@ select {
     /* Backgrounds */
     --bg-main: #f9fafb;
     --bg-card: #ffffff;
+    --bg-muted: var(--gray-200);
 
     /* Spacing */
     --space-xs: 0.25rem;
