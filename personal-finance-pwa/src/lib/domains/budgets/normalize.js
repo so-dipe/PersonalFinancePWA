@@ -8,9 +8,10 @@ function normalizeDate(date) {
 export function normalizeBudget(budget) {
     return new Budget({
         categoryUuid: budget.categoryUuid,
+        description: budget.description?.trim(),
         amount: Math.abs(Number(budget.amount)),
         periodUnit: budget.periodUnit,
         periodCount: budget.periodCount,
-        startDate: normalizeDate(budget.date)
+        startDate: normalizeDate(budget.startDate)
     })
 }

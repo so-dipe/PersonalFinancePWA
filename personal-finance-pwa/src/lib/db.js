@@ -43,6 +43,7 @@ db.version(1).stores({
         ++id,
         uuid,
         categoryUuid,
+        description,
         amount,
         periodUnit,
         periodCount,

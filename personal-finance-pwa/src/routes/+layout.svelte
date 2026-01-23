@@ -18,13 +18,14 @@
 
 
 <svelte:head>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <link rel="icon" href="/k.svg" type="image/svg+xml"/>
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <meta name="description" content="A personal finance app." />
 </svelte:head>
 
 
 <div class="app">
+    <h1>.kobo</h1>
     <Notifications />
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
     <Sidebar open={sidebarOpen} on:close={closeSidebar} />

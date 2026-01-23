@@ -13,3 +13,11 @@ export const CLOUD_STORAGE_PROVIDERS_NAME_MAP = {
     icloud: "iCloud",
     dropbox: "DropBox"
 }
+
+export const BUDGET_PERIODS = [
+    "day",
+    "week",
+    "month",
+    "quarter",
+    "year"
+]

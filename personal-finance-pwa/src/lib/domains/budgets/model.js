@@ -2,6 +2,7 @@ export class Budget {
     constructor({
         uuid,
         categoryUuid,
+        description,
         amount,
         periodUnit,
         periodCount,
@@ -9,6 +10,7 @@ export class Budget {
     }) {
         this.uuid = uuid ?? crypto.randomUUID();
         this.categoryUuid = categoryUuid;
+        this.description = description;
         this.amount = amount || 0;
         this.periodUnit = periodUnit;
         this.periodCount = periodCount;

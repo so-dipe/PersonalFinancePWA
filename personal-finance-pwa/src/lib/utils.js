@@ -108,3 +108,14 @@ export function isValidISODate(date) {
     const d = new Date(date);
     return !Number.isNaN(d.getTime());
 }
+
+export function getDefaultBudgetForm() {
+    return {
+        categoryUuid: "",
+        description: "",
+        amount: "0.01",
+        periodUnit: "month",
+        periodCount: 1,
+        startDate: new Date().toISOString().slice(0, 10)
+    }
+}

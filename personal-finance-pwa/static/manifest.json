@@ -1,6 +1,6 @@
 {
-  "name": ".kobo",
-  "short_name": ".kobo",
+  "name": "Kobo",
+  "short_name": "Kobo",
   "description": "kobo - ...every naira counts.",
   "version": "0.0.1",
   "start_url": "/",
