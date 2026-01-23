@@ -33,7 +33,6 @@
 
 <style>
 .page {
-    padding: var(--space-lg);
     animation: fadeIn 0.3s ease;
 }
 
