@@ -113,7 +113,7 @@ export function getDefaultBudgetForm() {
     return {
         categoryUuid: "",
         description: "",
-        amount: "0.01",
+        amount: "",
         periodUnit: "month",
         periodCount: 1,
         startDate: new Date().toISOString().slice(0, 10)

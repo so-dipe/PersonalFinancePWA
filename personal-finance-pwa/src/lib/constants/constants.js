@@ -14,10 +14,10 @@ export const CLOUD_STORAGE_PROVIDERS_NAME_MAP = {
     dropbox: "DropBox"
 }
 
-export const BUDGET_PERIODS = [
-    "day",
-    "week",
-    "month",
-    "quarter",
-    "year"
-]
+export const BUDGET_PERIODS = {
+    day: "Daily",
+    week: "Weekly",
+    month: "Monthly",
+    quarter: "Quarterly",
+    year: "Yearly"
+}

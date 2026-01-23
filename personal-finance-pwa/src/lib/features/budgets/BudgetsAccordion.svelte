@@ -2,8 +2,12 @@
     export let title;
     export let open = false;
 
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
+
     function toggle() {
-        open = !open;
+        dispatch('toggle');
     }
 </script>
 

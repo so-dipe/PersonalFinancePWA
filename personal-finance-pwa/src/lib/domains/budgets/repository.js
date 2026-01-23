@@ -1,5 +1,5 @@
 import { db } from "$lib/db";
-import { makeFingerprint } from "../categories";
+import { makeFingerprint } from "./fingerprint";
 import { normalizeBudget } from "./normalize";
 import { validateBudget } from "./rules";
 
@@ -8,6 +8,7 @@ export async function addBudget(bdgt) {
     validateBudget(budget);
 
     const fingerprint = makeFingerprint(budget);
+    console.log(fingerprint);
 
     try {
         await db.budgets.add({
@@ -22,7 +23,8 @@ export async function addBudget(bdgt) {
     } catch (e) {
         if (e.name === 'ConstraintError') {
             const existing = await db.budgets.where('fingerprint').equals(fingerprint).first();
-            throw { 'code': "BUDGET_DUPLICATE", meta: { id: existing?.id }};
+            console.log(existing);
+            throw { 'code': "BUDGET_DUPLICATE", meta: { id: existing?.id, uuid: existing?.uuid }};
         }
         throw { 'code': "BUDGET_SAVE_FAILED", meta: {error: e} }
     }

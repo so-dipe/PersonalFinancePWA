@@ -42,6 +42,7 @@ db.version(1).stores({
     budgets: `
         ++id,
         uuid,
+        &fingerprint,
         categoryUuid,
         description,
         amount,
