@@ -55,7 +55,7 @@
 }
 
 .progress-fill.warning {
-    background: var(--yellow-500);
+    background: var(--amber-500);
 }
 
 .progress-fill.danger {
