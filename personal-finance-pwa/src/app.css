@@ -38,6 +38,12 @@ select {
     --green-500: #2fbf71;
     --green-100: #e8f5ee;
 
+   /* Ambers */
+   --amber-900: #7a4a0f;
+   --amber-700: #d97706;
+   --amber-500: #f59e0b;
+   --amber-100: #fef3c7;
+
     /* Grays */
     --gray-900: #1f2937;
     --gray-700: #374151;
@@ -45,6 +51,7 @@ select {
     --gray-200: #e5e7eb;
 
     /*Reds */
+    --red-900: #7f1d1d;
     --red-700: #b91c1c;
     --red-500: #ef4444;
     --red-100: #fee2e2;
