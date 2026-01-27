@@ -4,26 +4,34 @@ import { makeFingerprint } from "./fingerprint";
 import { Category } from "./model";
 import { normalizeCategory } from "./normalize";
 import { validateCategory } from "./rules";
+import { v5 as uuidV5 } from "uuid";
+import { SYSTEM_NAMESPACE } from "$lib/constants/constants";
 
 export async function loadDefaultCategories() {
     const now = new Date().toISOString();
 
-    for (const [name, transactionType] of Object.entries(DEFAULT_CATEGORIES)) {
-        const category = normalizeCategory(name, transactionType)
-        const fingerprint = makeFingerprint(category);
-        const existing = await db.categories.where("fingerprint").equals(fingerprint).first();
+    for (const [key, cat] of Object.entries(DEFAULT_CATEGORIES)) {
+        const uuid = uuidV5(`${key}:${cat.transactionType}`, SYSTEM_NAMESPACE);
+
+        const existing = await db.categories
+            .where("uuid")
+            .equals(uuid)
+            .first();
 
         if (existing) continue;
 
+        const category = normalizeCategory(cat.name, cat.transactionType);
+
         await db.categories.add({
-            uuid: crypto.randomUUID(),
-            fingerprint,
-            name,
-            transactionType,
+            uuid,
+            fingerprint: makeFingerprint(category),
+            name: cat.name,
+            transactionType: cat.transactionType,
+            system: 1,
             createdAt: now,
             modifiedAt: now,
             deleted: 0,
-            synced: 0
+            synced: 1
         });
     }
 }

@@ -24,6 +24,7 @@ db.version(1).stores({
         &fingerprint,
         name,
         transactionType,
+        system,
         createdAt,
         modifiedAt,
         deleted,
