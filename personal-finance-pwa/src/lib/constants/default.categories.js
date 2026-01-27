@@ -5,7 +5,6 @@ export const DEFAULT_CATEGORIES = {
     gift : { transactionType: "income", name: "Gift🧧" },
     bonus : { transactionType: "income", name: "Bonus💰" },
 
-
     //EXPENSE
     food : { transactionType: "expense", name: "Food🌮" },
     transport : { transactionType: "expense", name: "Transport🚖" },
