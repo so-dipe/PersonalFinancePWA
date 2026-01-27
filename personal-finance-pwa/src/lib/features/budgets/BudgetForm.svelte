@@ -91,9 +91,16 @@
 
 @media (max-width: 600px) {
     .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+    }
+
+    .form-grid .period-preview,
+    .form-grid .actions {
+        grid-column: span 1 !important;
     }
 }
+
+
 
 .form-grid label {
     display: flex;
