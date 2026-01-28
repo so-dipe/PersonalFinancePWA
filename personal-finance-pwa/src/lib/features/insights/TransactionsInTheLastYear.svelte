@@ -33,11 +33,20 @@
     const dummyData = generateDummyData();
 </script>
 
-<CalendarHeatmap
+<div class="container">
+    <h3>Transactions in the last year</h3>
+    <CalendarHeatmap
     data={dummyData} 
     on:hover={e => hovered = e.detail}
     on:move={e => hovered = {...hovered, ...e.detail}}
-/>
-{#if hovered}
-    <HeatmapTooltip {...hovered} />
-{/if}
+    />
+    {#if hovered}
+        <HeatmapTooltip {...hovered} />
+    {/if}
+</div>
+
+<style>
+.container {
+    overflow-x: auto;
+}
+</style>
