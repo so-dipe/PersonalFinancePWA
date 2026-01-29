@@ -8,6 +8,7 @@ export function liveTransactionsBetween(start, end) {
         db.transactions
             .where("date")
             .between(start, end, true, true)
+            .filter(tx => tx.deleted === 0)
             .toArray()
     );
 }
@@ -18,6 +19,7 @@ export function summariseTransactionsByCategories(start, end) {
             db.transactions
                 .where("date")
                 .between(start, end, true, true)
+                .filter(tx => tx.deleted === 0)
                 .toArray(),
             getActiveCategories()
         ])
@@ -39,6 +41,7 @@ export function dailyCategoryContribution(start, end) {
             db.transactions
                 .where("date")
                 .between(start, end, true, true)
+                .filter(tx => tx.deleted === 0)
                 .toArray(),
             getActiveCategories()
         ]);

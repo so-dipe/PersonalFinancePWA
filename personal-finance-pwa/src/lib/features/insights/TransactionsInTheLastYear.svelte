@@ -2,11 +2,15 @@
     import CalendarHeatmap from "$lib/components/viz/CalendarHeatmap.svelte";
     import HeatmapTooltip from "$lib/components/viz/HeatmapTooltip.svelte";
     import InsightsAccordion from "./InsightsAccordion.svelte";
-    import { dailyCategoryContribution } from "$lib/domains/insights/queries";
-    import { dailyTotals } from "$lib/domains/insights/agg/metrics";
+    import { dailyCategoryContribution } from "$lib/domains/insights";
+    import { dailyTotals } from "$lib/domains/insights";
+    import { getActiveCategories } from "$lib/domains/categories";
 
     let open = true;
     let hovered = null;
+
+    let selectedCategoryUuids = [];
+    let selectedTransactionType = "all";
 
     const today = new Date();
     
