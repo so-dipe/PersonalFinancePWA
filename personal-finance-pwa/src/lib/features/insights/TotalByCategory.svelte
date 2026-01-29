@@ -1,9 +1,12 @@
 <script>
     import BarChart from "$lib/components/viz/BarChart.svelte";
+    import BarChartTooltip from "$lib/components/viz/BarChartTooltip.svelte";
     import { summariseTransactionsByCategories } from "$lib/domains/insights";
 
     export let start;
     export let end;
+
+    let hovered = null;
 
     $: startStr = start?.toISOString().slice(0, 10);
     $: endStr = end?.toISOString().slice(0, 10);
@@ -18,9 +21,18 @@
         x: d.category.name,
         y: d.total
     }))
-
-    console.log($data);
-    console.log(barchartData);
 </script>
 
-<BarChart data={barchartData} />
+<BarChart 
+    data={barchartData} 
+    on:hover={e => hovered = e.detail}
+    on:move={e => {
+        if (hovered) {
+            hovered = {...hovered, ...e.detail}
+        }
+    }}
+/>
+
+{#if hovered}
+    <BarChartTooltip {...hovered} />
+{/if}

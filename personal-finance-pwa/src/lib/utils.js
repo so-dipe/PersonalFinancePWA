@@ -32,6 +32,14 @@ export function formatFinancial(amount, isNegative = false) {
     return isNegative ? `( ${formatted} )` : formatted;
 }
 
+export function formatAmountShort(amount) {
+    if (amount >= 1e9) return (amount / 1e9).toFixed(1) + "B";
+    if (amount >= 1e6) return (amount / 1e6).toFixed(1) + "M";
+    if (amount >= 1e3) return (amount / 1e3).toFixed(1) + "K";
+
+    return amount;
+}
+
 export function formatAmount(tx) {
     const formatted = tx.amount.toLocaleString("en-NG", {
         style: "decimal",
