@@ -75,3 +75,29 @@ export function dailyCategoryContribution(start, end) {
         }));
     });
 }
+
+export function totals(start, end, selectedCategoryUuids = []) {
+    return liveQuery(async () => {
+        const [transactions, categories] = await Promise.all([
+            db.transactions
+                .where("date")
+                .between(start, end, true, true)
+                .filter(tx => tx.deleted === 0)
+                .toArray(),
+            getActiveCategories()
+        ]);
+
+        const categoryMap = indexByUuid(categories);
+        const categoryUuids = categories.map(c => c.uuid);
+
+        const categorySet = selectedCategoryUuids.length
+            ? new Set(selectedCategoryUuids)
+            : new Set(categories.map(c => c.uuid))
+
+        const total = transactions
+            .filter(tx => categorySet.has(tx.categoryUuid))
+            .reduce((sum, tx) => sum + tx.amount, 0);
+
+        return total;
+    });
+}
