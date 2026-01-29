@@ -29,11 +29,11 @@ export function groupTransactionsByDay(transactions) {
 export function getAllDays(start, end) {
     const days = [];
     const current = new Date(start);
+    const endDate = new Date(end);
 
-    while (current <= end) {
+    while (current <= endDate) {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
     }
-
     return days;
 }

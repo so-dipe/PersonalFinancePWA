@@ -1,49 +1,54 @@
 <script>
     import CalendarHeatmap from "$lib/components/viz/CalendarHeatmap.svelte";
     import HeatmapTooltip from "$lib/components/viz/HeatmapTooltip.svelte";
-    import * as d3 from "d3";
+    import InsightsAccordion from "./InsightsAccordion.svelte";
+    import { dailyCategoryContribution } from "$lib/domains/insights/queries";
+    import { dailyTotals } from "$lib/domains/insights/agg/metrics";
 
+    let open = true;
     let hovered = null;
 
-    function generateDummyData() {
-        const today = d3.timeDay.floor(new Date());
-        const start = d3.timeDay.offset(today, -364);
+    const today = new Date();
+    
+    const start = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate() + 2);
+    const end = new Date(today);
 
-        const days = d3.timeDays(start, d3.timeDay.offset(today, 1));
+    const startStr = start.toISOString().slice(0, 10);
+    const endStr = end.toISOString().slice(0, 10);
 
-        return days.map(d => {
-            const hasActivity = Math.random() > 0.25;
+    const dailyData = dailyCategoryContribution(startStr, endStr);
 
-            let value = 0;
+    $: heatmapData = 
+        $dailyData 
+            ? dailyTotals($dailyData).map(d => ({
+                date: d.date,
+                value: d.total
+            }))
+            : [];
 
-            if (hasActivity) {
-                if (Math.random() > 0.6) {
-                    value = Math.floor(Math.random() * 80_000) + 10_000;
-                } else {
-                    value = -1 * (Math.floor(Math.random() * 30_000) + 2_000);
-                }
-            }
-            return {
-                date: d3.timeFormat("%Y-%m-%d")(d),
-                value
-            };
-        });
-    }
-
-    const dummyData = generateDummyData();
 </script>
 
-<div class="container">
-    <h3>Transactions in the last year</h3>
-    <CalendarHeatmap
-    data={dummyData} 
-    on:hover={e => hovered = e.detail}
-    on:move={e => hovered = {...hovered, ...e.detail}}
-    />
-    {#if hovered}
-        <HeatmapTooltip {...hovered} />
-    {/if}
-</div>
+<InsightsAccordion 
+    title="Transactions in the last year"
+    open={open}
+    on:toggle={() => open = !open}
+>
+    <div class="container">
+        <CalendarHeatmap
+            data={heatmapData} 
+            on:hover={e => hovered = e.detail}
+            on:move={e => {
+                if (hovered) {
+                    hovered = {...hovered, ...e.detail}
+                }
+            }}
+        />
+
+        {#if open && hovered}
+            <HeatmapTooltip {...hovered} />
+        {/if}
+    </div>
+</InsightsAccordion>
 
 <style>
 .container {

@@ -26,6 +26,7 @@ export function summariseTransactionsByCategories(start, end) {
         const summary = summariseByCategory(transactions);
 
         return Object.entries(summary).map(([categoryUuid, total]) => ({
+            categoryUuid: categoryUuid,
             category: categoryMap[categoryUuid] ?? null,
             total
         }));
@@ -64,6 +65,7 @@ export function dailyCategoryContribution(start, end) {
         return days.map(day => ({
             date: day,
             categories: categoryUuids.map(uuid => ({
+                categoryUuid: uuid,
                 category: categoryMap[uuid],
                 total: summaryMap[day][uuid]
             }))

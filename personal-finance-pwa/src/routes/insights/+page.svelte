@@ -17,12 +17,25 @@
 
 </script>
 
-<DateRangePicker bind:start bind:end on:change={onDateChange} />
-<BarChart data={[
-    { x: 'Jan 1', y: 10 },
-    { x: 'Jan 2', y: 20 },
-    { x: 'Jan 3', y: 30 }
-]} width={500} height={250}/>
+<div class="page">
+    <DateRangePicker bind:start bind:end on:change={onDateChange} />
+    <BarChart data={[
+        { x: 'Jan 1', y: 10 },
+        { x: 'Jan 2', y: 20 },
+        { x: 'Jan 3', y: 30 }
+    ]} width={500} height={250}/>
 
-<TransactionsInTheLastYear />
+    <TransactionsInTheLastYear />
+</div>
+
+<style>
+    .page {
+        padding: var(--space-lg);
+        animation: fadeIn 0.3s ease;
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+    }
+</style>
 

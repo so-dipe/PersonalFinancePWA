@@ -5,12 +5,12 @@
     export let data = [];
 
     let svg;
-    let width = 1000;
-    let height = 180;
+    let width = 900;
+    let height = 130;
 
-    const cellSize = 16;
+    const cellSize = 13;
     const cellGap = 2;
-    const margin = { top: 20, right: 20, bottom: 20, left: 40 };
+    const margin = { top: 20, right: 0, bottom: 20, left: 40 };
 
     const format = d3.timeFormat("%Y-%m-%d");
 
@@ -58,7 +58,7 @@
                 const value = dataMap.get(format(d)) ?? 0;
                 return value === 0 ? "#e5e7eb" : color(value);
             })
-            .on("mouseenter", (event, d) => {
+            .on("mouseenter", function (event, d) {
                 const date = format(d);
                 dispatch("hover", {
                     date,
@@ -75,10 +75,10 @@
                     x: event.pageX,
                     y: event.pageY
                 });
-                d3.select(this).attr("stroke", null);
             })
-            .on("mouseleave", () => {
+            .on("mouseleave", function () {
                 dispatch("hover", null);
+                d3.select(this).attr("stroke", null);
             });
 
         const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -100,7 +100,7 @@
             .selectAll("text")
             .data(months)
             .join("text")
-            .attr("x", d => d3.timeWeek.count(start, d) * (cellSize + cellGap) + margin.left)
+            .attr("x", d => d3.timeWeek.count(start, d) * (cellSize + cellGap) + margin.left + 8)
             .attr("y", margin.top - 10)
             .attr("text-anchor", "middle")
             .attr("font-size", 10)
@@ -111,7 +111,9 @@
 
     onMount(render);
 
-    $: render();
+    $: if (svg && data) {
+        render();
+    };
 </script>
 
 <svg
