@@ -14,8 +14,6 @@
 
     let selectedCategoriesUuids = [];
 
-    $: console.log(selectedCategoriesUuids)
-
 </script>
 
 <div class="page">
