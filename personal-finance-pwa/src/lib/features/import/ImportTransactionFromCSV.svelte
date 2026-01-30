@@ -39,8 +39,6 @@
         return raw
             .toString()
             .trim()
-            .toLowerCase()
-            .replace(/\s+/g, ' ');
     }
 
     function resolveCategories(transactions, categoryMap) {

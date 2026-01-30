@@ -70,6 +70,19 @@
 
 .notification {
     display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+    max-width: 450px;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
     gap: var(--space-sm);
 }
 

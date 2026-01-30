@@ -9,7 +9,6 @@ function makeSimilarityKey(tx) {
 }
 
 export async function runImportPipeline(rawTransactions) {
-    console.log(rawTransactions);
     const normalized = rawTransactions.map(tx => {
         return {
             ...tx,
