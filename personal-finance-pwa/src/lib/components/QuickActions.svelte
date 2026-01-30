@@ -28,7 +28,7 @@
         {:else}
             {#each $quickActions as tx}
                 <button class="quick-action-btn" on:click={() => handleSelect(tx)}>
-                    {tx.description} - {tx.category} - {formatAmount(tx)}
+                    {tx.description} | {tx.category} | {formatAmount(tx)}
                 </button>
             {/each}
         {/if}
