@@ -29,28 +29,37 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+  
+  // 1. NAVIGATION STRATEGY (The Refresh Fix)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('/').then((response) => {
+        // Return index.html from cache immediately, even if online
+        return response || fetch(event.request);
+      })
+    );
+    return;
+  }
 
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
+  // 2. ASSET STRATEGY (JS, CSS, Images)
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cachedResponse = await cache.match(event.request);
+      
+      if (cachedResponse) return cachedResponse;
 
-    // Try cache first
-    const cachedResponse = await cache.match(event.request);
-    if (cachedResponse) return cachedResponse;
-
-    try {
-      const networkResponse = await fetch(event.request);
-      if (networkResponse && networkResponse.ok) {
-        cache.put(event.request, networkResponse.clone());
+      try {
+        const networkResponse = await fetch(event.request);
+        // Only cache valid responses
+        if (networkResponse.status === 200) {
+          cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (err) {
+        // Fallback is already handled by the navigate block above
+        return new Response('Offline and asset not cached', { status: 408 });
       }
-      return networkResponse;
-    } catch (err) {
-      // SPA fallback for offline navigation
-      if (event.request.mode === 'navigate') {
-        const fallback = await cache.match('/');
-        if (fallback) return fallback;
-      }
-      throw err;
-    }
-  })());
+    })()
+  );
 });
