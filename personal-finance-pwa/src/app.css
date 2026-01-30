@@ -64,6 +64,8 @@ select {
     --bg-main: #f9fafb;
     --bg-card: #ffffff;
     --bg-muted: var(--gray-200);
+    --surface-1: #ffffff;
+    --surface-2: #f9fafb;
 
     /* Spacing */
     --space-xs: 0.25rem;
@@ -80,6 +82,8 @@ select {
     /* Shadow */
     --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.1);
+
 
     transition: background 0.3s, color 0.3s;
 }

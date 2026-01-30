@@ -23,6 +23,8 @@
     }))
 </script>
 
+<div class="container">
+<h3>By Category</h3>
 <BarChart 
     data={barchartData} 
     on:hover={e => hovered = e.detail}
@@ -32,6 +34,7 @@
         }
     }}
 />
+</div>
 
 {#if hovered}
     <BarChartTooltip {...hovered} />

@@ -1,15 +1,14 @@
 <script>
     import { createEventDispatcher } from "svelte";
 
-
     const dispatch = createEventDispatcher();
-
 
     export let start = new Date();
     export let end = new Date();
 
-
     let selectedRange = "";
+
+    const DEFAULT_RANGE_INDEX = 3;
 
 
     const ranges = [
@@ -20,6 +19,12 @@
         { label: "This Quarter", fn: thisQuarter },
         { label: "This Year", fn: thisYear}
     ]
+
+    const [initialStart, initialEnd] = ranges[DEFAULT_RANGE_INDEX].fn();
+    start = initialStart;
+    end = initialEnd;
+    selectedRange = DEFAULT_RANGE_INDEX;
+    dispatch("change", { start, end })
 
     function selectRange(fn) {
         const [s, e] = fn();
@@ -67,39 +72,72 @@
 </script>
 
 
-<div>
+<div class="date-range">
     <select 
         bind:value={selectedRange} 
         on:change={() => selectedRange !== "" && selectRange(ranges[selectedRange].fn)}
     >
-        <option value="" disabled>Custom</option>
+        <option value="">Custom</option>
 
         {#each ranges as r, i}
             <option value={i}>{r.label}</option>
         {/each}
     </select>
 
-
-    <input
-        type="date"
-        value={startStr}
-        on:change={(e) => {
-            start = new Date(e.target.value);
-            dispatch("change", { start, end });
-            selectedRange = "";
-        }}
-    />
-    <span>to</span>
-    <input
-        type="date"
-        value={endStr}
-        on:change={(e) => {
-            end = new Date(e.target.value);
-            dispatch("change", { start, end });
-            selectedRange = "";
-        }}
-    />
+    <div class="dates">
+        <input
+            type="date"
+            value={startStr}
+            on:change={(e) => {
+                start = new Date(e.target.value);
+                dispatch("change", { start, end });
+                selectedRange = "";
+            }}
+            max={endStr}
+        />
+        <span>➡️</span>
+        <input
+            type="date"
+            value={endStr}
+            on:change={(e) => {
+                end = new Date(e.target.value);
+                dispatch("change", { start, end });
+                selectedRange = "";
+            }}
+            min={startStr}
+        />
+    </div>
 </div>
+
+<style>
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.date-range select,
+.date-range input {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-400);
+    background-color: var(--surface-1);
+    font-size: 0.9rem;
+}
+
+.date-range select:focus,
+.date-range input:focus {
+    outline: none;
+    border-color: var(--green-700);
+}
+
+.dates {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--gray-700);
+}
+</style>
 
 
 

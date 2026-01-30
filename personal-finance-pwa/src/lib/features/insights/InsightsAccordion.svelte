@@ -13,7 +13,7 @@
 
 <div class="accordion">
     <button class="accordion-header" aria-expanded={open} on:click={toggle}>
-        <span>{title}</span>
+        <h3>{title}</h3>
         <span class="chevron">{open ? '▾' : '▸'}</span>
     </button>
     {#if open}

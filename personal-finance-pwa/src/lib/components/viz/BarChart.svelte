@@ -5,18 +5,47 @@
     import { draw } from "svelte/transition";
 
     export let data = [];
-    export let width = 1000;
     export let height = 300;
+    export let minWidth = 500;
 
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    let container;
+    let width = 0;
+    
+    const minBarWidth = 40;
+
+    const margin = { top: 20, right: 50, bottom: 30, left: 0 };
 
     const dispatch = createEventDispatcher();
 
     let svg;
 
-    $: if (data.length) render();
+    $: if (data && width && svg) {
+        const numBars = data.length;
+        const calculatedWidth = numBars * minBarWidth;
+        const actualWidth = Math.max(calculatedWidth, width, minWidth);
+        render(data, actualWidth, height);
+    }
 
-    function render() {
+    function renderEmptyState(innerWidth, innerHeight, g) {
+        g.append("rect")
+            .attr("width", innerWidth)
+            .attr("height", innerHeight)
+            .attr("rx", 12)
+            .attr("fill", "var(--surface-2");
+
+        g.append("text")
+            .attr("x", innerWidth / 2)
+            .attr("y", innerHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("fill", "var(--gray-500)")
+            .attr("font-size", 16)
+            .text("No data to display")
+    }
+
+    function render(data, width, height) {
+        if (!width || !svg) return;
+
         d3.select(svg).selectAll("*").remove();
 
         const innerWidth = width - margin.left - margin.right;
@@ -28,6 +57,11 @@
 
         const g = root.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        if (!data || data.length === 0) {
+            renderEmptyState(innerWidth, innerHeight, g);
+            return;
+        }
 
         const x = d3.scaleBand()
             .domain(data.map(d => d.x))
@@ -129,8 +163,18 @@
     }
 
     onMount(() => {
-        if (data.length) render();
+        const ro = new ResizeObserver(([entry]) => {
+            const newWidth = entry.contentRect.width;
+            if (newWidth !== width) {
+                width = newWidth;
+            }
+        });
+        ro.observe(container);
+
+        return () => ro.disconnect();
     })
 </script>
 
-<svg bind:this={svg}></svg>
+<div class="chart-container" bind:this={container}>
+    <svg bind:this={svg}></svg>
+</div>
