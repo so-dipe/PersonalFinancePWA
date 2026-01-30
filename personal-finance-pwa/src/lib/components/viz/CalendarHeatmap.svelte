@@ -3,14 +3,17 @@
     import { createEventDispatcher, onMount } from "svelte";
 
     export let data = [];
+    export let end = new Date();
 
     let svg;
-    let width = 900;
+    let width = 800;
     let height = 130;
 
-    const cellSize = 13;
+    const cellSize = 12;
     const cellGap = 2;
-    const margin = { top: 20, right: 0, bottom: 20, left: 40 };
+    const margin = { top: 20, right: 0, bottom: 5, left: 40 };
+
+    const ONE_YEAR_DAYS = 364;
 
     const format = d3.timeFormat("%Y-%m-%d");
 
@@ -21,14 +24,14 @@
     function render() {
         if (!svg) return;
 
-        const today = d3.timeDay.floor(new Date());
-        const start = d3.timeDay.offset(today, -364);
+        const startDay = d3.timeDay.floor(start);
+        const endDay = d3.timeDay.floor(resolvedEnd);
 
-        const days = d3.timeDays(start, d3.timeDay.offset(today, 1));
+        const days = d3.timeDays(startDay, d3.timeDay.offset(endDay, 1));
 
         const months = d3.timeMonths(
-            d3.timeMonth.floor(start),
-            d3.timeMonth.ceil(today)
+            d3.timeMonth.floor(startDay),
+            d3.timeMonth.ceil(endDay)
         );
 
         const dataMap = new Map(
@@ -111,7 +114,13 @@
 
     onMount(render);
 
-    $: if (svg && data) {
+    $: resolvedEnd = end
+        ? d3.timeDay.floor(end)
+        : d3.timeDay.floor(new Date());
+
+    $: start = d3.timeDay.offset(resolvedEnd, -ONE_YEAR_DAYS);
+
+    $: if (svg && data && start && resolvedEnd) {
         render();
     };
 </script>

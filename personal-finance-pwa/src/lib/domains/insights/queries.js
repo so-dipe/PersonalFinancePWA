@@ -101,3 +101,15 @@ export function totals(start, end, selectedCategoryUuids = []) {
         return total;
     });
 }
+
+export function getAllYears() {
+    return liveQuery(async () => {
+        const years = await db.transactions
+            .orderBy('date')
+            .keys()
+
+        return [
+            ...new Set(years.map(d => new Date(d).getFullYear()))
+        ];
+    });
+}

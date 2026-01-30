@@ -13,7 +13,7 @@
     
     const minBarWidth = 40;
 
-    const margin = { top: 20, right: 50, bottom: 30, left: 0 };
+    const margin = { top: 5, right: 5, bottom: 30, left: 5 };
 
     const dispatch = createEventDispatcher();
 
@@ -84,7 +84,7 @@
             .attr("height", d => innerHeight - y(d.y))
             .attr("rx", 6)
             .attr("ry", 6)
-            .attr("fill", d => d.color)
+            .attr("fill", d => d.color ?? "var(--green-900")
             .on("mouseenter", function (event, d) {
                 dispatch("hover", {
                     content: formatFinancial(d.y),
@@ -104,7 +104,7 @@
             .on("mouseleave", function () {
                 dispatch("hover", null);
                 d3.select(this)
-                    .attr("fill", "var(--green-700)")
+                    .attr("fill", d => d.color ?? "var(--green-900")
                     .attr("stroke", null);
             })
 

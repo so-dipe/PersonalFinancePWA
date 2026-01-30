@@ -21,18 +21,22 @@
 </script>
 
 <div class="main-stats">
-    <CalloutCard 
-        label="Total Income" 
-        value={formatFinancial($totalIncome ?? "")} 
-        icon="🤑"
-        color="green"
-    />
-    <CalloutCard 
-        label="Total Expenses" 
-        value={formatFinancial($totalExpense ?? "")} 
-        icon="😭"
-        color="red"
-    />
+    <div class="stat-card">
+        <CalloutCard 
+            label="Total Income" 
+            value={formatFinancial($totalIncome ?? "")} 
+            icon="🤑"
+            color="green"
+        />
+    </div>
+    <div class="stat-card">
+        <CalloutCard 
+            label="Total Expenses" 
+            value={formatFinancial($totalExpense ?? "")} 
+            icon="😭"
+            color="red"
+        />
+    </div>
 </div>
 
 <style>
@@ -40,5 +44,19 @@
     display: flex;
     gap: var(--space-md);
     flex-wrap: wrap;
+}
+
+.stat-card {
+    flex: 1 1 250px;
+    min-width: 250px;
+}
+
+@media (max-width: 600px) {
+    .main-stats {
+        flex-direction: column;
+    }
+    .stat-card {
+        width: 100%;
+    }
 }
 </style>
