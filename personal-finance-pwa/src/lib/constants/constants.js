@@ -23,3 +23,14 @@ export const BUDGET_PERIODS = {
     quarter: "Quarterly",
     year: "Yearly"
 }
+
+export const PROFILE_PHOTOS = [
+    "/profile/1.png",
+    "/profile/2.png",
+    "/profile/3.png",
+    "/profile/4.png",
+    "/profile/5.png",
+    "/profile/6.png",
+    "/profile/7.png",
+    "/profile/8.png"
+]

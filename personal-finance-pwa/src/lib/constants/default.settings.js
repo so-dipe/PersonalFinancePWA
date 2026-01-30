@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS = {
     account: {
         name: "random",
         email: "random@example.com",
-        picture: "/avatar.png",
+        picture: "/profile/1.png",
         setBy: "system"
     },
 

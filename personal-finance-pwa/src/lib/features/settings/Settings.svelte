@@ -4,6 +4,7 @@
     import { get } from 'svelte/store';
     import { useSetting, getSetting, setSetting } from '$lib/domains/settings';
     import { notify } from '$lib/stores/notification.store';
+    import EditProfile from './EditProfile.svelte';
 
     const syncSetting = useSetting("sync");
     const displaySetting = useSetting("display");
@@ -61,6 +62,10 @@
             checked={$displaySetting?.darkMode}
             on:change={(e) => updateDarkMode(e.detail)}
         />
+    </div>
+
+    <div class="setting-item">
+        <EditProfile />
     </div>
 </div>
 
