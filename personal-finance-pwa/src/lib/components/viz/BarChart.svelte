@@ -6,7 +6,7 @@
 
     export let data = [];
     export let height = 300;
-    export let minWidth = 500;
+    export let minWidth = 300;
 
     let container;
     let width = 0;
@@ -84,7 +84,7 @@
             .attr("height", d => innerHeight - y(d.y))
             .attr("rx", 6)
             .attr("ry", 6)
-            .attr("fill", "var(--green-700)")
+            .attr("fill", d => d.color)
             .on("mouseenter", function (event, d) {
                 dispatch("hover", {
                     content: formatFinancial(d.y),

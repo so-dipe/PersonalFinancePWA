@@ -10,6 +10,11 @@
 
     let hovered = null;
 
+    const TYPE_COLORS = {
+        income: "var(--green-700)",
+        expense: "var(--red-700)"
+    }
+
     $: startStr = start?.toISOString().slice(0, 10);
     $: endStr = end?.toISOString().slice(0, 10);
 
@@ -36,7 +41,7 @@
         barChartData = filtered.map(d => ({
             x: d.category.name,
             y: d.total,
-            type: d.category.transactionType
+            color: TYPE_COLORS[d.category.transactionType]
         }));
     }
 </script>
