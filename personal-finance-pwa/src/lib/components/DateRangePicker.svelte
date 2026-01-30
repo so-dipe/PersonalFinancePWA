@@ -137,6 +137,13 @@
     gap: var(--space-xs);
     color: var(--gray-700);
 }
+
+@media (max-width: 640px) {
+.date-range {
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+}
 </style>
 
 

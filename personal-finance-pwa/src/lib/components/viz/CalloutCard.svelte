@@ -32,7 +32,6 @@
 }
 
 .stat-card:hover {
-    transform: scale(1.01);
     box-shadow: var(--shadow-lg);
 }
 

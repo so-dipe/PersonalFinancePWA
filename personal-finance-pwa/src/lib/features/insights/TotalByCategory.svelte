@@ -47,18 +47,26 @@
 </script>
 
 <div class="container">
-<h3>By Category</h3>
-<BarChart 
-    data={barChartData} 
-    on:hover={e => hovered = e.detail}
-    on:move={e => {
-        if (hovered) {
-            hovered = {...hovered, ...e.detail}
-        }
-    }}
-/>
+    <h3>By Category</h3>
+    <div class="chart">
+        <BarChart 
+            data={barChartData} 
+            on:hover={e => hovered = e.detail}
+            on:move={e => {
+                if (hovered) {
+                    hovered = {...hovered, ...e.detail}
+                }
+            }}
+        />
+    </div>
 </div>
 
 {#if hovered}
     <BarChartTooltip {...hovered} />
 {/if}
+
+<style>
+.chart {
+    overflow-x: auto;
+}
+</style>

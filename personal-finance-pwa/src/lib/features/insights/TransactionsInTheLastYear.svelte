@@ -105,6 +105,8 @@
 .heatmap {
     overflow-x: auto;
     flex: 1;
+    scroll-snap-type: x proximity;
+
 }
 
 .year-selector {
@@ -145,6 +147,7 @@
 }
 
 .heatmap {
+    width: 100%;
     overflow-x: auto;
 }
 

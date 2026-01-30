@@ -20,18 +20,22 @@
     <header class="header">
         <h3>Insights</h3>
         <div class="controls">
-            <DateRangePicker 
-                start={start}
-                end={end}
-                on:change={(e) => {
-                    start = e.detail.start;
-                    end = e.detail.end;
-                }}
-            />
-            <CategorySelector 
-                categories={$categories}
-                bind:selectedUuids={selectedCategoriesUuids}
-            />
+            <div>
+                <DateRangePicker 
+                    start={start}
+                    end={end}
+                    on:change={(e) => {
+                        start = e.detail.start;
+                        end = e.detail.end;
+                    }}
+                />
+            </div>
+            <div>
+                <CategorySelector 
+                    categories={$categories}
+                    bind:selectedUuids={selectedCategoriesUuids}
+                />
+            </div>
         </div>
     </header>
     
@@ -57,6 +61,7 @@
 <style>
     .page {
         padding: var(--space-xl) var(--space-md);
+        padding-top: calc(var(--space-xl) + 20px);
         max-width: 1100px;
         margin: 0 auto;
         display: flex;
@@ -91,5 +96,17 @@
         padding: var(--space-lg);
         box-shadow: var(--shadow-md);
     }
+
+@media (max-width: 640px) {
+.controls {
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+}
+
+.controls > * {
+    width: 100%;
+}
+}
 </style>
 

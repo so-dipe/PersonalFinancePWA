@@ -53,7 +53,7 @@
 
 @media (max-width: 600px) {
     .main-stats {
-        flex-direction: column;
+        overflow-x: auto;
     }
     .stat-card {
         width: 100%;
