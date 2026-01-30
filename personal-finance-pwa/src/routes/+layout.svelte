@@ -27,11 +27,11 @@
 
 
 <div class="app">
-    <header class="app-header">
+    <!-- <header class="app-header">
         <div class="center">
             <span class="app-logo">kobo</span>
         </div>
-    </header>
+    </header> -->
     <Notifications />
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
     <Sidebar open={sidebarOpen} on:close={closeSidebar} />

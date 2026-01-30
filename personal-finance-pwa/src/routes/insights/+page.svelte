@@ -18,7 +18,7 @@
 
 <div class="page">
     <header class="header">
-        <h3>Insights</h3>
+        <!-- <h3>Insights</h3> -->
         <div class="controls">
             <div>
                 <DateRangePicker 
