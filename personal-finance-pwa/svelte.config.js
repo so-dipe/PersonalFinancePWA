@@ -9,9 +9,7 @@ const config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			fallback: 'index.html',
-			precompress: false,
-			strict: true
+			fallback: 'index.html'
 		}),
 		serviceWorker: { 
 			register: true,
