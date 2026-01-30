@@ -6,27 +6,45 @@
     export let start;
     export let end;
 
+    export let categoriesUuids = [];
+
     let hovered = null;
 
     $: startStr = start?.toISOString().slice(0, 10);
     $: endStr = end?.toISOString().slice(0, 10);
 
-    let data;
+    let dataStore;
+    let barChartData = [];
 
     $: if (startStr && endStr) {
-        data = summariseTransactionsByCategories(startStr, endStr);
+        dataStore = summariseTransactionsByCategories(startStr, endStr);
     }
 
-    $: barchartData = $data?.map(d => ({
-        x: d.category.name,
-        y: d.total
-    }))
+    $: if (dataStore && categoriesUuids) {
+        const rawData = $dataStore ?? [];
+        let filtered = categoriesUuids.length > 0
+            ? rawData.filter(d => categoriesUuids.includes(d.category.uuid))
+            : rawData;
+
+        const typeOrder = { income: 0, expense: 1}
+        filtered.sort((a, b) => {
+            const typeDiff = typeOrder[a.category.transactionType] - typeOrder[b.category.transactionType];
+            if (typeDiff !== 0) return typeDiff;
+            return b.total - a.total;
+        })
+
+        barChartData = filtered.map(d => ({
+            x: d.category.name,
+            y: d.total,
+            type: d.category.transactionType
+        }));
+    }
 </script>
 
 <div class="container">
 <h3>By Category</h3>
 <BarChart 
-    data={barchartData} 
+    data={barChartData} 
     on:hover={e => hovered = e.detail}
     on:move={e => {
         if (hovered) {

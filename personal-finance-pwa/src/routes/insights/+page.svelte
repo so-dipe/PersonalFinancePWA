@@ -43,7 +43,11 @@
         />
     </div>
     <div class="section">
-        <TotalByCategory {start} {end} />
+        <TotalByCategory 
+            {start} 
+            {end}
+            categoriesUuids={selectedCategoriesUuids}
+        />
     </div>
     <div class="section">
         <TransactionsInTheLastYear />
