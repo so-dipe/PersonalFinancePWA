@@ -56,7 +56,10 @@ self.addEventListener('fetch', (event) => {
       try {
         const networkResponse = await fetch(event.request);
         // Only cache valid responses
-        if (networkResponse.status === 200) {
+        if (
+          networkResponse.status === 200 &&
+          url.origin === self.location.origin
+        ) {
           cache.put(event.request, networkResponse.clone());
         }
         return networkResponse;
