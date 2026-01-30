@@ -86,7 +86,6 @@
                 }));
 
         transactions = await runImportPipeline(raw);
-        console.log(transactions);
         showDialog = true;
     }
 
@@ -162,18 +161,13 @@
         try {
             const ready = transactions.filter(tx => tx.status === "ready")
 
-            console.log(ready);
-
             if (!ready.length) return;
 
             for (const tx of ready) {
                 if (!tx.rawCategory) continue;
-                console.log(tx.rawCategory);
                 const { uuid } = await getOrCreateCategory(tx.rawCategory, tx.transactionType);
                 tx.categoryUuid = uuid;
             }
-
-            console.log(ready);
 
             await addTransactionBulk(ready);
 
