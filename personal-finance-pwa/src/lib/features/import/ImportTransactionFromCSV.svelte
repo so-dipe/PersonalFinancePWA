@@ -8,7 +8,7 @@
     import ImportDialog from './ImportDialog.svelte';
     import { notify } from '$lib/stores/notification.store';
     import { onMount } from 'svelte';
-    import { getActiveCategories } from '$lib/domains/categories';
+    import { getActiveCategories, getOrCreateCategory } from '$lib/domains/categories';
     import Papa from 'papaparse';
 
     let file;
@@ -33,13 +33,49 @@
         return file.name.toLowerCase().endsWith('.csv');
     }
 
+    function normalizeCategory(raw) {
+        if (!raw) return null;
+
+        return raw
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ');
+    }
+
+    function resolveCategories(transactions, categoryMap) {
+        const newCategories = new Map();
+
+        const resolved = transactions.map(tx => {
+            if (!tx.rawCategory) {
+                return {...tx, categoryUuid: null };
+            }
+
+            const existing = categoryMap[tx.rawCategory];
+            if (existing) {
+                return {...tx, categoryUuid: existing };
+            }
+
+            if (!newCategories.has(tx.rawCategory)) {
+                newCategories.set(tx.rawCategory, crypto.randomUUID());
+            }
+
+            return {
+                ...tx,
+                categoryUuid: newCategories.get(tx.rawCategory),
+                _isNewCategory: true
+            };
+        });
+        return {
+            transactions: resolved,
+            newCategories: [...newCategories.keys()]
+        }
+    }
+
     async function processRows(rows) {
         const raw = rows
             .filter(r => r.length >= 4)
-            .map(r => {
-                const rawCategory = (r[4] || '').toString().trim().toLowerCase();
-
-                return {
+            .map(r => ({
                     date: normalizeToISODate(r[0]),
                     transactionType: (r[1] ?? 'expense')
                         .toString()
@@ -47,14 +83,12 @@
                         .toLowerCase(),
                     description: r[2] || '',
                     amount: r[3] ?? 0,
-                    category: rawCategory
-                        ? categoryMap[rawCategory] ?? '__UNKNOWN__'
-                        : null,
+                    rawCategory: normalizeCategory(r[4]),
                     source: 'csv/excel'
-                };
-            });
+                }));
 
         transactions = await runImportPipeline(raw);
+        console.log(transactions);
         showDialog = true;
     }
 
@@ -128,19 +162,29 @@
 
     async function commitImport() {
         try {
-            const readyTransactions = transactions.filter(
-                (tx) => tx.status === "ready"
-            );
-            if (!readyTransactions.length) {
-                notify({ type: "warning", message: "No valid transactions to import."});
-                return;
+            const ready = transactions.filter(tx => tx.status === "ready")
+
+            console.log(ready);
+
+            if (!ready.length) return;
+
+            for (const tx of ready) {
+                if (!tx.rawCategory) continue;
+                console.log(tx.rawCategory);
+                const { uuid } = await getOrCreateCategory(tx.rawCategory, tx.transactionType);
+                tx.categoryUuid = uuid;
             }
-            await addTransactionBulk(readyTransactions);
-            notify({ type: "success", message: `${readyTransactions.length} transactions imported.`})
+
+            console.log(ready);
+
+            await addTransactionBulk(ready);
+
+            notify({ type: "success", message: `${ready.length} transactions imported.`})
             showDialog = false;
             transactions = []
-        } catch (err) {
-            notify({ type: "error", message: "❌Oops...Import failed."})
+        } catch (e) {
+            console.error(e);
+            notify(errorToNotification(e));
         }
     }
 </script>

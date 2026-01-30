@@ -1,31 +1,29 @@
-import { makeFingerprint, checkExistingFingerprints, normalizeTransaction } from "$lib/domains/transactions";
+function makeSimilarityKey(tx) {
+    return [
+        tx.transactionType,
+        tx.date,
+        tx.amount,
+        tx.description?.toLowerCase().trim(),
+        tx.rawCategory
+    ].join("|");
+}
 
 export async function runImportPipeline(rawTransactions) {
+    console.log(rawTransactions);
     const normalized = rawTransactions.map(tx => {
-        const n = normalizeTransaction(tx);
         return {
-            ...n,
-            fingerprint: makeFingerprint(n),
-            status: 'pending'
+            ...tx,
+            status: 'pending',
+            similarityKey: makeSimilarityKey(tx)
         };
     });
 
     const seen = new Set();
     for (const tx of normalized) {
-        if (seen.has(tx.fingerprint)) {
+        if (seen.has(tx.similarityKey)) {
             tx.status = 'duplicate-file';
         } else {
-            seen.add(tx.fingerprint);
-        }
-    }
-
-    const fingerprints = normalized.map(t => t.fingerprint);
-    const existing = await checkExistingFingerprints(fingerprints);
-    const existingSet = new Set(existing);
-
-    for (const tx of normalized) {
-        if (existingSet.has(tx.fingerprint)) {
-            tx.status = 'duplicate-db';
+            seen.add(tx.similarityKey);
         }
     }
 

@@ -50,11 +50,15 @@ export async function addTransactionBulk(transactions) {
         const keys = await db.transactions.bulkAdd(rows, { allKeys: true });
         return { ok: true, keys }
     } catch (e) {
-        if (e.name === 'ConstraintError') {
+        if (e.name === 'BulkError') {
             const duplicates = [];
-            for (const row of rows) {
-                const existing = await db.transactions.where('fingerprint').equals(row.fingerprint).first();
-                if (existing) duplicates.push(existing.id);
+
+            for (const failure of e.failures) {
+                if (failure.name === 'ConstraintError') {
+                    const row = rows[failure.pos];
+                    const existing = await db.transactions.where('fingerprint').equals(row.fingerprint).first();
+                    if (existing) duplicates.push(existing.id);
+                }
             }
             throw { code: 'TX_DUPLICATE', meta: { duplicates } };
         }

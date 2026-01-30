@@ -5,21 +5,50 @@
 
 <div class="notifications">
     {#each $notifications as n (n.id)}
-    <div class="notification {n.type}" in:fly={{ y:-20, duration:200 }} out:fade={{ duration: 200 }}>
-        <span>{n.message}</span>
-        {#if n.action}
-            <button on:click={n.action.handler}>
-                {n.action.label}
-            </button>
-        {/if}
-        {#if n.dismissible}
-            <button class="dismiss-btn" on:click={() => {notifications.update(x => x.filter(i => i.id !== n.id))}}>
-                &times;
-            </button>
-        {/if}
-    </div>
+        <div
+            class="notification {n.severity}"
+            in:fly={{ y: -20, duration: 200 }}
+            out:fade={{ duration: 200 }}
+        >
+            <div class="content">
+                {#if n.title}
+                    <div class="title">{n.title}</div>
+                {/if}
+
+
+                <div class="message">{n.message}</div>
+
+
+                {#if n.hint}
+                    <div class="hint">{n.hint}</div>
+                {/if}
+            </div>
+
+
+            <div class="actions">
+                {#if n.action}
+                    <button class="action-btn" on:click={n.action.handler}>
+                        {n.action.label}
+                    </button>
+                {/if}
+
+
+                {#if n.dismissible}
+                    <button
+                        class="dismiss-btn"
+                        on:click={() =>
+                            notifications.update(x => x.filter(i => i.id !== n.id))
+                        }
+                    >
+                        &times;
+                    </button>
+                {/if}
+            </div>
+        </div>
     {/each}
 </div>
+
+
 
 <style>
 .notifications {
@@ -36,35 +65,61 @@
 
 .notification {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 300px;
-    max-width: 450px;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    color: white;
-    font-weight: 500;
-    box-shadow: var(--shadow-md);
-    pointer-events: auto;
-    position: relative;
-    overflow: hidden;
+    gap: var(--space-sm);
 }
+
+.notification {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+
+.title {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+
+.message {
+    font-size: 0.85rem;
+}
+
+
+.hint {
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+
+/* map severity instead of type */
+.notification.error {
+    background: var(--red-500);
+}
+
+
+.notification.warning {
+    background: var(--amber-700);
+}
+
+
+.notification.info {
+    background: var(--gray-700);
+}
+
 
 .notification.success {
     background: var(--green-700);
 }
 
-.notification.error {
-    background: var(--red-500);
-}
 
-.notification.info {
-    background: var(--gray-700)
-}
-
-.notification.warning {
-    background: orange;
-}
 
 .dismiss-btn {
     background: transparent;

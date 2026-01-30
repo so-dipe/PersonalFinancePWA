@@ -57,7 +57,7 @@
                     <td>{tx.transactionType}</td>
                     <td>{tx.description}</td>
                     <td>{tx.amount}</td>
-                    <td>{tx.category}</td>
+                    <td>{tx.rawCategory}</td>
                     <td>{tx.status}</td>
                 </tr>
             {/each}

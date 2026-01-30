@@ -7,6 +7,63 @@ import { validateCategory } from "./rules";
 import { v5 as uuidV5 } from "uuid";
 import { SYSTEM_NAMESPACE } from "$lib/constants/constants";
 
+export async function getOrCreateCategory(name, transactionType, options = {}) {
+    const now = new Date().toISOString();
+
+    const category = normalizeCategory(name, transactionType);
+    validateCategory(category);
+
+    const fingerprint = makeFingerprint(category);
+
+    // 1. Try existing
+    const existing = await db.categories
+        .where('fingerprint')
+        .equals(fingerprint)
+        .first();
+
+    if (existing) {
+        return {
+            uuid: existing.uuid,
+            created: false
+        };
+    }
+
+    // 2. Create
+    try {
+        await db.categories.add({
+            ...category,
+            fingerprint,
+            system: options.system ? 1 : 0,
+            createdAt: now,
+            modifiedAt: now,
+            deleted: 0,
+            synced: options.system ? 1 : 0
+        });
+
+        return {
+            uuid: category.uuid,
+            created: true
+        };
+    } catch (e) {
+        // 3. Race safety
+        if (e.name === "ConstraintError") {
+            const retry = await db.categories
+                .where('fingerprint')
+                .equals(fingerprint)
+                .first();
+
+            if (retry) {
+                return {
+                    uuid: retry.uuid,
+                    created: false
+                };
+            }
+        }
+
+        throw { code: "CAT_SAVE_FAILED", meta: {} };
+    }
+}
+
 export async function loadDefaultCategories() {
     const now = new Date().toISOString();
 
@@ -37,44 +94,41 @@ export async function loadDefaultCategories() {
 }
 
 export async function addCategory(name, transactionType) {
-    const category = normalizeCategory(name, transactionType);
-    validateCategory(category);
-
-    const fingerprint = makeFingerprint(category);
-    const existing = await db.categories.where('fingerprint').equals(fingerprint).first();
-    if (existing) throw { code: 'CAT_DUPLICATE', meta: { id: existing.id } }
-
-    try {
-        const id = await db.categories.add({
-            ...category,
-            fingerprint,
-            createdAt: new Date().toISOString(),
-            modifiedAt: new Date().toISOString(),
-            deleted: 0,
-            synced: 0
-        });
-        return { ok: true, id, uuid: category.uuid };
-    } catch (e) {
-        if (e.name === 'ConstraintError') throw { code: "CAT_DUPLICATE", meta: {} };
-        throw { code: "CAT_SAVE_FAILED", meta: {} };
+    const result = await getOrCreateCategory(name, transactionType);
+    
+    if (!result.created) {
+        throw { code: 'CAT_DUPLICATE'};
     }
+
+    return result;
 }
 
 export async function editCategory(idOrUuid, updates) {
     const cat = await db.categories.get(idOrUuid);
     if (!cat) throw { code: "CAT_NOT_FOUND" };
 
-    const transactionType = updates.transactionType ? updates.transactionType : cat.transactionType;
-    const category = normalizeCategory(updates.name ?? cat.name, transactionType);
+    const transactionType = updates.transactionType ?? cat.transactionType;
+    const normalized = normalizeCategory(updates.name ?? cat.name, transactionType);
 
-    const updated = {
+    const fingerprint = makeFingerprint(normalized);
+
+    const collision = await db.categories
+        .where("fingerprint")
+        .equals(fingerprint)
+        .and(c => c.id !== cat.id)
+        .first();
+    
+    if (collision) {
+        throw { code: "CAT_DUPLICATE" };
+    }
+
+    await db.categories.update(cat.id, {
         ...cat,
         ...updates,
-        fingerprint: makeFingerprint(category),
+        fingerprint,
         modifiedAt: new Date().toISOString(),
         synced: 0
-    }
-    await db.categories.update(cat.id, updated)
+    });
 }
 
 export async function deleteCategory(idOrUuid) {
@@ -86,4 +140,40 @@ export async function deleteCategory(idOrUuid) {
         modifiedAt: new Date().toISOString(),
         synced: 0
     });
+}
+
+function collectCategoryCandidates(transactions) {
+    const map = new Map();
+
+    for (const tx of transactions) {
+        if (!tx.rawCategory) continue;
+
+        const category = normalizeCategory(tx.rawCategory, tx.transactionType);
+
+        const fingerprint = makeFingerprint(category);
+
+        map.set(fingerprint, {
+            name: category.name,
+            transactionType: category.transactionType
+        });
+    }
+
+    return map;
+}
+
+export async function detectNewCategories(transactions) {
+    const candidates = collectCategoryCandidates(transactions);
+
+    const existing = await db.categories
+        .where("fingerprint")
+        .anyOf([...candidates.keys()])
+        .toArray();
+    
+    const existingFingerprints = new Set(
+        existing.map(c => c.fingerprint)
+    )
+
+    return [...candidates.entries()]
+        .filter(([fp]) => !existingFingerprints.has(fp))
+        .map(([, cat]) => cat);
 }

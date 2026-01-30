@@ -5,10 +5,13 @@ export const notifications = writable([]);
 export function notify(notification) {
     const id = crypto.randomUUID();
 
+    const severity = notification.severity || notification.type || "info";
+
     notifications.update(n => [
         ...n,
         {
             id,
+            severity,
             dismissible: true,
             timeout: 4000,
             ...notification
