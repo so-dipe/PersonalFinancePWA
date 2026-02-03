@@ -118,8 +118,8 @@
 
 <style>
     .account-page {
-        padding: var(--space-lg);
-        max-width: 800px;
+        padding: clamp(8px, 2vw, 20px);
+        max-width: 900px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
@@ -130,17 +130,22 @@
         display: flex;
         align-items: center;
         gap: var(--space-md);
-        margin-top: 10vh;
+        margin-top: 4vh;
         margin-bottom: var(--space-lg);
-        font-family: 'Montserrat', sans-serif;
+        padding: var(--space-lg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--gray-200);
+        background: var(--surface-2);
     }
 
 
     .account-top .avatar {
-        width: 150px;
-        height: 150px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         object-fit: cover;
+        border: 4px solid white;
+        box-shadow: var(--shadow-sm);
     }
 
 
@@ -165,5 +170,17 @@
 
     .connect-link:hover, .disconnect-link:hover {
         color: var(--green-500);
+    }
+
+    @media (max-width: 720px) {
+        .account-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .account-top .avatar {
+            width: 96px;
+            height: 96px;
+        }
     }
 </style>

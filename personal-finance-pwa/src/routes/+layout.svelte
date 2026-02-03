@@ -36,7 +36,9 @@
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
     <Sidebar open={sidebarOpen} on:close={closeSidebar} />
 
-	<slot />
+    <div class="app-shell">
+        <slot />
+    </div>
 </div>
 
 <style>

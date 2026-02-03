@@ -2,7 +2,6 @@
     import { addTransactionBulk } from '$lib/domains/transactions';
     import { runImportPipeline } from '$lib/features/import/pipeline';
     import { normalizeToISODate } from '$lib/utils';
-    import { json } from '@sveltejs/kit';
     import * as XLSX from 'xlsx';
     import Accordion from '$lib/components/Accordion.svelte';
     import ImportDialog from './ImportDialog.svelte';
@@ -10,6 +9,8 @@
     import { onMount } from 'svelte';
     import { getActiveCategories, getOrCreateCategory } from '$lib/domains/categories';
     import Papa from 'papaparse';
+    import { Import } from 'lucide-svelte';
+    import { errorToNotification } from '$lib/stores/notification.mapper';
 
     let file;
     let transactions = [];
@@ -39,6 +40,7 @@
         return raw
             .toString()
             .trim()
+            .toLowerCase()
     }
 
     function resolveCategories(transactions, categoryMap) {
@@ -119,7 +121,6 @@
                     } else {
                         rows = parsed.data;
                     }
-                    rows = parsed.data;
                 } else {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -181,7 +182,13 @@
     }
 </script>
 
-<Accordion title="Import from CSV/Excel">
+<Accordion open={false}>
+     <span slot="title" class="accordion-title">
+      <span class="icon" aria-hidden="true">
+            <Import class="icon" />
+      </span>
+        Import from CSV/Excel
+    </span>
     <div class="import-instructions">
         <h4>Before importing your file</h4>
         <ul>
@@ -215,6 +222,27 @@
 {/if}
 
 <style>
+
+   .accordion-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+
+
+.icon {
+  width: 22px;
+  height: 22px;
+  
+  display: grid;
+  place-items: center;
+  color: var(--green-700);
+}
+
+
+
     .import-instructions {
         background: var(--bg-main);
         border: 1px solid var(--gray-200);

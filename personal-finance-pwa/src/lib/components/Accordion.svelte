@@ -13,9 +13,12 @@
 
 <div class="accordion">
     <button class="accordion-header" aria-expanded={open} on:click={toggle}>
-        <span>{title}</span>
+        <slot name="title">
+            <span>{title}</span>
+        </slot>
         <span class="chevron">{open ? '▾' : '▸'}</span>
     </button>
+
     {#if open}
         <div class="accordion-body" transition:slide>
             <slot />
@@ -30,7 +33,6 @@
     background: var(--bg-card);
 }
 
-
 .accordion-header {
     all: unset;
     display: flex;
@@ -41,15 +43,15 @@
     font-weight: 600;
 }
 
-
 .accordion-body {
     padding: var(--space-md);
     border-top: 1px solid var(--gray-200);
 }
 
-
 .chevron {
     font-size: 0.8rem;
     opacity: 0.7;
 }
+
+
 </style>

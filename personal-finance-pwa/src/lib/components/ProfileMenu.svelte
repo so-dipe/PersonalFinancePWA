@@ -22,19 +22,23 @@
 
 
 <div class="nav card">
-    <button class="profile-btn" on:click={() => goto('/account')} aria-label="Account">
-        <img 
-            src={$account?.picture || '/avatar.png'} 
-            alt={$account?.name ? `${$account.name} Profile` : 'Profile'} 
-            class="avatar"
-        >
-    </button>
+    <div class="nav-cluster">
+        <button class="profile-btn floating-btn" on:click={() => goto('/account')} aria-label="Account">
+            <img 
+                src={$account?.picture || '/avatar.png'} 
+                alt={$account?.name ? `${$account.name} Profile` : 'Profile'} 
+                class="avatar"
+            >
+        </button>
+    </div>
 
-    <button class="hamburger" class:open={sidebarOpen} on:click={toggleSidebar} aria-label="Toggle Sidebar">
-        <span class="bar top"></span>
-        <span class="bar middle"></span>
-        <span class="bar bottom"></span>
-    </button>
+    <div class="nav-cluster">
+        <button class="hamburger floating-btn" class:open={sidebarOpen} on:click={toggleSidebar} aria-label="Toggle Sidebar">
+            <span class="bar top"></span>
+            <span class="bar middle"></span>
+            <span class="bar bottom"></span>
+        </button>
+    </div>
 </div>
 
 
@@ -51,10 +55,18 @@
         gap: var(--space-md);
 
 
-        padding: var(--space-sm);
+        padding: 0.4rem 0.6rem;
         background: var(--bg-card);
-        border-radius: var(--radius-lg);
+        border-radius: 999px;
         box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        backdrop-filter: blur(10px);
+    }
+
+    .nav-cluster {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
 
@@ -111,5 +123,44 @@
     }
     .hamburger.open .bottom {
         transform: translateY(-11px) rotate(-45deg);
+    }
+
+    .floating-btn {
+        border-radius: 999px;
+        background: white;
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+    }
+
+    @media (min-width: 721px) {
+        .profile-btn,.nav,
+        .hamburger {
+            display: none;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .nav {
+            top: auto;
+            right: 16px;
+            bottom: 20px;
+            flex-direction: column;
+            gap: 10px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .floating-btn {
+            width: 52px;
+            height: 52px;
+            box-shadow: 0 16px 32px rgba(17, 24, 39, 0.16);
+        }
+
+        .hamburger .bar {
+            width: 26px;
+            height: 4px;
+        }
     }
 </style>

@@ -60,9 +60,8 @@
 
 <style>
     .page {
-        padding: var(--space-xl) var(--space-md);
-        padding-top: calc(var(--space-xl) + 20px);
-        max-width: 1100px;
+        padding: clamp(8px, 2vw, 20px);
+        max-width: 1150px;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
@@ -75,6 +74,10 @@
         align-items: center;
         gap: var(--space-md);
         flex-wrap: wrap;
+        background: var(--surface-2);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        border: 1px solid var(--gray-200);
     }
 
     .header h3 {
@@ -86,15 +89,17 @@
         display: flex;
         gap: var(--space-sm);
         padding: var(--space-xs);
-        background: var(--surface-2);
-        border-radius: var(--radius-sm);
+        background: white;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
     }
 
     .section {
         background: var(--surface-1);
         border-radius: var(--radius-md);
         padding: var(--space-lg);
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
     }
 
 @media (max-width: 640px) {

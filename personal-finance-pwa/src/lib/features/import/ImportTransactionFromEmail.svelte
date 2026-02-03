@@ -5,6 +5,7 @@
     import Accordion from "$lib/components/Accordion.svelte";
     import ImportDialog from "./ImportDialog.svelte";
     import { notify } from "$lib/stores/notification.store";
+     import { Mail } from "lucide-svelte";
 
     let transactions = [];
     let loading = false;
@@ -61,25 +62,37 @@
     }
 </script>
 
-<Accordion title="Import from Email">
+<Accordion open={false}>
+    <span slot="title" class="accordion-title">
+      <span class="icon" aria-hidden="true">
+            <Mail class="icon" />
+      </span>
+        Import from Email
+    </span>
+
     <div class="email-form">
         <label for="fromInput">
             Sender
             <input id="fromInput" bind:value={q.from} placeholder="e.g. alerts@bank.com" />
         </label>
+
         <label for="subjectInput">
             Subject contains
             <input id="subjectInput" bind:value={q.subject} />
         </label>
+
         <label for="afterDateInput">
             After date
             <input id="afterDateInput" type="date" bind:value={q.afterDate} />
         </label>
+
         <button class="primary" on:click={loadTransactionsFromEmail} disabled={loading}>
             {loading ? 'Loading...' : 'Load Transactions'}
         </button>
     </div>
 </Accordion>
+
+
 {#if showDialog}
     <ImportDialog
         {transactions}
@@ -89,6 +102,30 @@
 {/if}
 
 <style>
+
+
+
+   .accordion-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+
+
+.icon {
+  width: 22px;
+  height: 22px;
+
+  display: grid;
+  place-items: center;
+  color: var(--green-700);
+}
+
+
+
+
     .email-form {
         display: flex;
         flex-direction: column;

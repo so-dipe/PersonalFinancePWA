@@ -19,9 +19,9 @@
 
 <style>
 .page {
-    padding: var(--space-lg);
+    padding: clamp(8px, 2vw, 20px);
     animation: fadeIn 0.3s ease;
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;

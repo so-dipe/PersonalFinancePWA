@@ -6,6 +6,7 @@
     import { useSetting } from '$lib/domains/settings';
 
     const syncSetting = useSetting('sync');
+    let showForm = true;
 
     async function bootstrapApp() {
         try {
@@ -20,37 +21,43 @@
     onMount(bootstrapApp);
 </script>
 
-<main class="page">
-    <div class="page-grid">
-        <div class="card">
-            <TransactionForm />
-        </div>
-        <div class="transactions-container">
-            <RecentTransactions />
-        </div>
+<main class="dashboard">
+    <div class="dashboard-grid">
+        {#if showForm}
+            <section class="dashboard-column">
+                <div class="card">
+                    <TransactionForm />
+                </div>
+            </section>
+        {/if}
     </div>
 </main>
 
 <style>
-.page {
-    animation: fadeIn 0.3s ease;
-}
 
-.page-grid {
-    display: grid;
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-lg);
 }
 
-@media (min-width: 768px) {
-    .page-grid {
-        grid-template-columns: repeat(2, 1fr);
-        align-items: start;
-    }
+
+
+
+
+.dashboard-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
 }
 
-.transactions-container {
-    padding-top: var(--space-lg);
-    overflow-y: auto;
+
+@media (min-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
 }
 
 @keyframes fadeIn {
