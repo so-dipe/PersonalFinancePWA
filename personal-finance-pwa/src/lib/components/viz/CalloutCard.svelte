@@ -25,15 +25,11 @@
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-md);
-    border-radius: var(--border-radius);
+    border-radius: 15px;
     background-color: var(--gray-100);
-    box-shadow: var(--shadow-md);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.stat-card:hover {
-    box-shadow: var(--shadow-lg);
-}
 
 .icon {
     font-size: 1.5rem;

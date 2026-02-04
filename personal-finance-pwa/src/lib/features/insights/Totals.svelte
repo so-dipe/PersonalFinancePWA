@@ -25,7 +25,7 @@
         <CalloutCard 
             label="Total Income" 
             value={formatFinancial($totalIncome ?? "")} 
-            icon="🤑"
+            icon=""
             color="green"
         />
     </div>
@@ -33,7 +33,7 @@
         <CalloutCard 
             label="Total Expenses" 
             value={formatFinancial($totalExpense ?? "")} 
-            icon="😭"
+            icon=""
             color="red"
         />
     </div>

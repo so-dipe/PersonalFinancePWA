@@ -4,9 +4,17 @@
     import TransactionForm from '$lib/features/transactions/TransactionForm.svelte';
     import RecentTransactions from '$lib/features/transactions/RecentTransactions.svelte';
     import { useSetting } from '$lib/domains/settings';
+    import Totals from '$lib/features/insights/Totals.svelte';
+    import { categories } from '$lib/domains/categories';
 
     const syncSetting = useSetting('sync');
     let showForm = true;
+
+    const today = new Date();
+    let startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    let endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    $: allCategoryUuids = $categories?.map((c) => c.uuid) ?? [];
 
     async function bootstrapApp() {
         try {
@@ -23,6 +31,15 @@
 
 <main class="dashboard">
     <div class="dashboard-grid">
+        <section class="dashboard-column">
+            <div class="card">
+                <Totals
+                    start={startOfMonth}
+                    end={endOfMonth}
+                    categoriesUuids={allCategoryUuids}
+                />
+            </div>
+        </section>
         {#if showForm}
             <section class="dashboard-column">
                 <div class="card">
