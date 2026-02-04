@@ -17,6 +17,7 @@
 
     let form = getDefaultTransactionForm();
     let submitting = false;
+    let showQuickTools = false;
 
     let prefilled = {
         transactionType: false,
@@ -90,7 +91,16 @@
         </div>
     </header>
 
-    <div class="card-section top-panels">
+    <button
+        class="quick-tools-toggle"
+        type="button"
+        on:click={() => (showQuickTools = !showQuickTools)}
+        aria-expanded={showQuickTools}
+    >
+        {showQuickTools ? "Hide quick actions & imports" : "Show quick actions & imports"}
+    </button>
+
+    <div class="card-section top-panels" class:collapsed={!showQuickTools}>
         <QuickActions on:prefill={(e) => prefillForm(e.detail)}/>
 
         <section class="barchips import-card">
@@ -228,6 +238,10 @@
         padding-top: var(--space-md);
     }
 
+    .quick-tools-toggle {
+        display: none;
+    }
+
     .top-panels {
         display: flex;
         gap: var(--space-md);
@@ -255,8 +269,8 @@
     }
 
     .import-chips {
-        /* display: flex; */
-        /* flex-wrap: wrap; */
+        display: flex;
+        flex-wrap: nowrap;
         gap: 0.5rem;
     }
 
@@ -276,6 +290,36 @@
 
     
     @media (max-width: 720px) {
+        .quick-tools-toggle {
+            display: block;
+            width: 100%;
+            margin-bottom: var(--space-sm);
+            border: 1px solid var(--gray-200);
+            background: var(--surface-2);
+            border-radius: var(--radius-md);
+            padding: 0.6rem 0.8rem;
+            font-weight: 600;
+            color: var(--green-900);
+            text-align: left;
+        }
+
+        .top-panels {
+            display: none;
+        }
+
+        .top-panels:not(.collapsed) {
+            display: flex;
+        }
+
+        .import-chips {
+            gap: 0.35rem;
+        }
+
+        .chip {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.45rem;
+        }
+
         .top-panels {
             flex-direction: column;
         }

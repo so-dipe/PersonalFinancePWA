@@ -1,6 +1,7 @@
 <script>
     import "../app.css";
     import Sidebar from '$lib/components/Sidebar.svelte';
+    import BottomNav from "$lib/components/BottomNav.svelte";
     import ProfileMenu from "$lib/components/ProfileMenu.svelte";
     import Notifications from "$lib/components/Notifications.svelte";
 
@@ -35,6 +36,7 @@
     <Notifications />
     <ProfileMenu bind:sidebarOpen={sidebarOpen} />
     <Sidebar open={sidebarOpen} on:close={closeSidebar} />
+    <BottomNav />
 
     <div class="app-shell">
         <slot />
@@ -42,20 +44,8 @@
 </div>
 
 <style>
-.center {
-  display: flex;
-  justify-content: center;
-  font-weight: 500;
-  font-size: 1rem;
-  color: var(--green-900);
-  pointer-events: none; /* subtle, non-interactive */
-}
 
-.app-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-}
+
+
 
 </style>

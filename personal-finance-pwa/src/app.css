@@ -20,6 +20,7 @@ body {
     color: var(--text-main);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 button,
@@ -235,6 +236,13 @@ select:focus {
         ),
         var(--bg-main);
     padding: clamp(16px, 2vw, 28px);
+    overflow-x: hidden;
+}
+
+.app-shell {
+    position: relative;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 /* .app-shell {
@@ -373,8 +381,12 @@ tbody tr:hover {
     }
 
     .app-shell {
+        padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .app-shell {
         border-radius: 16px;
-        padding: 16px;
+        padding: 0px;
     }
 
     table {

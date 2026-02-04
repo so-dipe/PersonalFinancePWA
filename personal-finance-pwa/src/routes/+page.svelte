@@ -31,7 +31,7 @@
 
 <main class="dashboard">
     <div class="dashboard-grid">
-        <section class="dashboard-column">
+        <section class="dashboard-column overview-totals">
             <div class="card">
                 <Totals
                     start={startOfMonth}
@@ -80,5 +80,11 @@
 @keyframes fadeIn {
     from {opacity: 0; transform: translateY(10px);}
     to {opacity: 1; transform: translateY(0);}
+}
+
+@media (max-width: 720px) {
+    .overview-totals {
+        display: none;
+    }
 }
 </style>

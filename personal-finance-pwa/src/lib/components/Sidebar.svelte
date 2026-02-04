@@ -1,6 +1,7 @@
 <script>
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
+    import { page } from "$app/stores";
     
     export let open = false;
     const dispatch = createEventDispatcher();
@@ -20,12 +21,18 @@
     function closeSidebar() {
         dispatch("close");
     }
+
+    function isActive(path) {
+        const current = $page?.url?.pathname ?? "/";
+        if (path === "/") {
+            return current === "/";
+        }
+        return current === path || current.startsWith(`${path}/`) || current.startsWith(path);
+    }
 </script>
 
 
-{#if open}
-    <div class="sidebar-backdrop" on:click={closeSidebar}></div>
-{/if}
+
 
 
 <aside class="sidebar" class:open={open}>
@@ -39,7 +46,7 @@
         </div>
     </div>
     <nav class="flex-col">
-        <button on:click={() => navigate('/')}>
+        <button class:active={isActive('/')} on:click={() => navigate('/')}>
             <span class="icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" />
@@ -47,7 +54,7 @@
             </span>
             <span class="label">Overview</span>
         </button>
-        <button on:click={() => navigate('/transactions')}>
+        <button class:active={isActive('/transactions')} on:click={() => navigate('/transactions')}>
             <span class="icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M5 7h14M5 12h10M5 17h7" />
@@ -55,7 +62,7 @@
             </span>
             <span class="label">Transactions</span>
         </button>
-        <button on:click={() => navigate('/budgets')}>
+        <button class:active={isActive('/budgets')} on:click={() => navigate('/budgets')}>
             <span class="icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4 6h16v12H4zM8 10h8M8 14h5" />
@@ -63,7 +70,7 @@
             </span>
             <span class="label">Budgets</span>
         </button>
-        <button on:click={() => navigate('/insights')}>
+        <button class:active={isActive('/insights')} on:click={() => navigate('/insights')}>
             <span class="icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4 19h16M7 16V9m5 7V5m5 11v-4" />
@@ -71,7 +78,7 @@
             </span>
             <span class="label">Insights</span>
         </button>
-        <button on:click={() => navigate('/account')}>
+        <button class:active={isActive('/account')} on:click={() => navigate('/account')}>
             <span class="icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 9a7 7 0 0 1 14 0" />
@@ -84,12 +91,7 @@
 
 
 <style>
-    .sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 199;
-    }
+ 
 
 
     .sidebar {
@@ -126,9 +128,7 @@
     }
 
     @media (min-width: 1024px) {
-        .sidebar-backdrop {
-            display: none;
-        }
+ 
 
         .sidebar {
             left: 0;
@@ -182,11 +182,7 @@
         font-size: 1.05rem;
     }
 
-    .brand-subtitle {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-    }
+
 
     nav {
         width: 100%;
@@ -215,6 +211,17 @@
         background: var(--green-100);
         border-color: var(--green-500);
         transform: translateX(4px);
+    }
+
+    nav button.active {
+        background: var(--green-100);
+        border-color: var(--green-500);
+    }
+
+    nav button.active .icon {
+        background: var(--green-700);
+        border-color: var(--green-700);
+        color: white;
     }
 
     nav button:disabled {

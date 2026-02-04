@@ -141,6 +141,10 @@
 
     @media (max-width: 720px) {
         .nav {
+            display: none;
+        }
+
+        .nav {
             top: auto;
             right: 16px;
             bottom: 20px;

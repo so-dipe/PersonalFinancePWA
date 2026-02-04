@@ -43,20 +43,26 @@
 .main-stats {
     display: flex;
     gap: var(--space-md);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .stat-card {
-    flex: 1 1 250px;
-    min-width: 250px;
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 @media (max-width: 600px) {
     .main-stats {
-        overflow-x: auto;
+        gap: var(--space-sm);
     }
-    .stat-card {
-        width: 100%;
+
+    :global(.main-stats .label) {
+        font-size: 0.7rem;
+    }
+
+    :global(.main-stats .value) {
+        font-size: 1.25rem;
     }
 }
+
 </style>
