@@ -12,9 +12,10 @@
 
     let draftBudget = null;
     let editingBudget = null;
-    let openAccordion = 'income';
 
     const sections = ['income', 'expense'];
+
+    let openAccordions = new Set(sections);
 
     $: isEditing = !!draftBudget || !!editingBudget;
 
@@ -27,6 +28,15 @@
         acc[type] = $categories?.filter(c => c.transactionType === type) ?? [];
         return acc;
     }, {});
+
+    function toggleAccordion(type) {
+        if (openAccordions.has(type)) {
+            openAccordions.delete(type);
+        } else {
+            openAccordions.add(type);
+        }
+        openAccordions = new Set(openAccordions); 
+    }
 
     async function addBudgetHandler(transactionType) {
         const cats = await getActiveCategories();
@@ -77,17 +87,15 @@
             errorToNotification(e);
         }
     }
-
-    function toggleAccordion(type) {
-        openAccordion = openAccordion === type ? null : type;
-    }
 </script>
+
+
 
 <div class="manage-budgets">
     {#each sections as type}
-        <BudgetsAccordion 
+        <BudgetsAccordion
             title={type === 'income' ? 'Income' : 'Expense'}
-            open={openAccordion === type}
+            open={openAccordions.has(type)}
             on:toggle={() => toggleAccordion(type)}
         >
             <div class="budget-list">
@@ -98,14 +106,14 @@
                             mode="edit"
                             categories={sectionCategories[type]}
                             on:save={handleEditSave}
-                            on:cancel={() => { editingBudget=null; }}
+                            on:cancel={() => { editingBudget = null; }}
                         />
                     {:else}
                         <Budget
                             budget={budget}
                             mode="view"
                             categories={sectionCategories[type]}
-                            on:edit={() => handleEdit({detail: budget})}
+                            on:edit={() => handleEdit({ detail: budget })}
                             on:delete={handleDelete}
                         />
                     {/if}
@@ -128,6 +136,7 @@
         </BudgetsAccordion>
     {/each}
 </div>
+
 
 <style>
 .manage-budgets {

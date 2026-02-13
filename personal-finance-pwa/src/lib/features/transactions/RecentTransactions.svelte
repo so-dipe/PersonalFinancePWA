@@ -197,7 +197,7 @@
         display: grid;
         place-items: center;
         border: 1px solid var(--gray-200);
-        background: white;
+        background: var(--surface-1);
     }
 
     .sync-indicator svg {

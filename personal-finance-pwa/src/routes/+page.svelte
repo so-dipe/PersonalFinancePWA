@@ -57,6 +57,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 
@@ -67,6 +69,12 @@
     display: grid;
     gap: var(--space-lg);
     grid-template-columns: 1fr;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.dashboard-column {
+    min-width: 0;
 }
 
 

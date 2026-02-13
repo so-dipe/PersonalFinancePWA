@@ -3,10 +3,9 @@
     import { runImportPipeline } from '$lib/features/import/pipeline';
     import { normalizeToISODate } from '$lib/utils';
     import * as XLSX from 'xlsx';
-    import Accordion from '$lib/components/Accordion.svelte';
     import ImportDialog from './ImportDialog.svelte';
     import { notify } from '$lib/stores/notification.store';
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
     import { getActiveCategories, getOrCreateCategory } from '$lib/domains/categories';
     import Papa from 'papaparse';
     import { Import } from 'lucide-svelte';
@@ -18,6 +17,8 @@
     
     let showDialog = false;
     let loading = false;
+    let showModal = false;
+    let dialog;
 
     let categoryMap = {};
 
@@ -180,39 +181,74 @@
             notify(errorToNotification(e));
         }
     }
+
+    async function openModal() {
+        showModal = true;
+        await tick();
+        if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeModal() {
+        showModal = false;
+        if (dialog) dialog.close();
+    }
 </script>
 
-<Accordion open={false}>
-     <span slot="title" class="accordion-title">
-      <span class="icon" aria-hidden="true">
+<button class="import-trigger" type="button" on:click={openModal}>
+    <span class="accordion-title">
+        <span class="icon" aria-hidden="true">
             <Import class="icon" />
-      </span>
+        </span>
         Import from CSV/Excel
     </span>
-    <div class="import-instructions">
-        <h4>Before importing your file</h4>
-        <ul>
-            <li>Ensure your data is in the <strong>first sheet</strong> of the file</li>
-            <li>Columns must be in this order:</li>
-            <li class="format">
-                Date | Transaction Type | Description | Amount | Category
-            </li>
-            <li>Check "First row is header" if applicable</li>
-        </ul>
-    </div>
-    <div class="upload-form">
-        <label class="file-input">
-            <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} disabled={loading} />
-        </label>
-        <label class="checkbox" for="hasHeader">
-            <input type="checkbox" id="hasHeader" bind:checked={hasHeader} disabled={!file}/>
-            <span>First row is header</span>
-        </label>
-        <button class="primary" on:click={importFile} disabled={loading}>
-            {loading ? 'Loading...': 'Load Transactions'}
-        </button>
-    </div>
-</Accordion>
+    <span class="chevron">▾</span>
+</button>
+
+{#if showModal}
+    <dialog
+        class="import-modal"
+        bind:this={dialog}
+        on:close={() => (showModal = false)}
+        on:keydown={(e) => {
+            if (e.key === "Escape") closeModal();
+        }}
+    >
+        <div class="modal-head">
+            <h3>Import from CSV/Excel</h3>
+            <button class="icon-btn" type="button" on:click={closeModal} aria-label="Close">
+                X
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="import-instructions">
+                <h4>Before importing your file</h4>
+                <ul>
+                    <li>Ensure your data is in the <strong>first sheet</strong> of the file</li>
+                    <li>Columns must be in this order:</li>
+                    <li class="format">
+                        Date | Transaction Type | Description | Amount | Category
+                    </li>
+                    <li>Check "First row is header" if applicable</li>
+                </ul>
+            </div>
+            <div class="upload-form">
+                <label class="file-input">
+                    <input type="file" accept=".csv, .xlsx, .xls" on:change={handleFileChange} disabled={loading} />
+                </label>
+                <label class="checkbox" for="hasHeader">
+                    <input type="checkbox" id="hasHeader" bind:checked={hasHeader} disabled={!file}/>
+                    <span>First row is header</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="ghost" type="button" on:click={closeModal}>Cancel</button>
+            <button class="primary" type="button" on:click={importFile} disabled={loading}>
+                {loading ? "Loading..." : "Load Transactions"}
+            </button>
+        </div>
+    </dialog>
+{/if}
 {#if showDialog}
     <ImportDialog
         {transactions}
@@ -240,9 +276,6 @@
   place-items: center;
   color: var(--green-700);
 }
-
-
-
     .import-instructions {
         background: var(--bg-main);
         border: 1px solid var(--gray-200);
@@ -319,5 +352,77 @@
     
     button.primary:hover {
         background: var(--green-700);
+    }
+
+    .import-trigger {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-sm);
+        background: var(--bg-card);
+    }
+
+    .chevron {
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+
+    dialog.import-modal {
+        border: none;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        background: var(--bg-card);
+        color: var(--text-main);
+        width: min(560px, 92vw);
+        max-height: 90vh;
+        padding: 0;
+    }
+
+    dialog.import-modal::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .modal-body {
+        padding: var(--space-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: var(--space-md);
+        border-top: 1px solid var(--gray-200);
+        background: var(--bg-card);
+    }
+
+    .icon-btn {
+        border: 1px solid var(--gray-200);
+        background: var(--surface-2);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        font-size: 0.9rem;
+    }
+
+    .ghost {
+        background: transparent;
+        border: 1px solid var(--gray-200);
+        color: var(--text-main);
     }
 </style>

@@ -65,6 +65,7 @@ select {
     --blue-700: #2563a6;
     --blue-500: #3b82c4;
     --blue-100: #e8f1fb;
+    --blue-400: #60a5fa;
 
     /* Text */
     --text-main: var(--gray-900);
@@ -76,6 +77,8 @@ select {
     --bg-muted: var(--gray-200);
     --surface-1: #ffffff;
     --surface-2: #f9fafb;
+    --bg-hover: #f3f4f6;
+    --border-subtle: var(--gray-200);
 
     /* Spacing */
     --space-xs: 0.25rem;
@@ -137,6 +140,14 @@ select {
     font-size: 0.95rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease,
         background 0.2s ease;
+    appearance: auto;
+    -webkit-appearance: menulist;
+    color: var(--text-main);
+}
+
+select option {
+    color: var(--text-main);
+    background: var(--surface-1);
 }
 
 input:focus,
@@ -203,14 +214,48 @@ select:focus {
 ================================ */
 
 [data-theme="dark"] {
-    --bg-main: #0f172a;
-    --bg-card: #020617;
+    /* Core surfaces */
+    --bg-main: #0b1220;
+    --bg-card: #0f172a;
+    --bg-muted: #111b2f;
+    --surface-1: #0f172a;
+    --surface-2: #111b2f;
 
-    --text-main: #e5e7eb;
-    --text-muted: #94a3b8;
+    /* Text */
+    --text-main: #f1f5f9;
+    --text-muted: #c0c7d6;
 
-    --gray-200: #1e293b;
-    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.6);
+    /* Accents (brighter for contrast) */
+    --green-900: #b7f5d2;
+    --green-700: #4ade80;
+    --green-500: #22c55e;
+    --green-100: #0f2a1f;
+
+    --blue-900: #bfdbfe;
+    --blue-700: #60a5fa;
+    --blue-500: #3b82f6;
+    --blue-100: #0f203a;
+
+    --amber-900: #fde68a;
+    --amber-700: #fbbf24;
+    --amber-500: #f59e0b;
+    --amber-100: #3a2a0a;
+
+    --red-100: #3a1212;
+
+    /* Grays/borders */
+    --gray-900: #e2e8f0;
+    --gray-700: #5b6b82;
+    --gray-400: #b6c0d0;
+    --gray-200: #22304d;
+
+    --bg-hover: #15213a;
+    --border-subtle: #24314f;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 14px 28px rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 20px 50px rgba(0, 0, 0, 0.4);
 
     transition: background 0.3s, color 0.3s;
 }
@@ -291,6 +336,9 @@ select:focus {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     position: relative;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 .card .card {

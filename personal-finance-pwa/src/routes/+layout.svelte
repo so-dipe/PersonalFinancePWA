@@ -4,10 +4,13 @@
     import BottomNav from "$lib/components/BottomNav.svelte";
     import ProfileMenu from "$lib/components/ProfileMenu.svelte";
     import Notifications from "$lib/components/Notifications.svelte";
+    import { useSetting } from "$lib/domains/settings";
+    import { browser } from "$app/environment";
 
 
     let sidebarOpen = false;
     let scrolled = false;
+    const displaySetting = useSetting("display");
 
     function toggleSidebar() {
         sidebarOpen = !sidebarOpen;
@@ -15,6 +18,15 @@
 
     function closeSidebar() {
         sidebarOpen = false;
+    }
+
+    $: if (browser) {
+        const darkMode = $displaySetting?.darkMode;
+        if (darkMode) {
+            document.documentElement.dataset.theme = "dark";
+        } else {
+            delete document.documentElement.dataset.theme;
+        }
     }
 </script>
 

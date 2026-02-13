@@ -32,6 +32,9 @@
             await loadDefaultCategories();
             categories = await getActiveCategories();
         }
+        if (!form.transactionType) {
+            form.transactionType = "expense";
+        }
     });
 
     function resetForm() {
@@ -57,6 +60,11 @@
 
     }
 
+
+
+
+    
+
     $: filteredCategories = form.transactionType ? categories.filter((c) => c.transactionType === form.transactionType) : [];
 
     async function submit() {
@@ -80,9 +88,12 @@
     <header class="card-header">
         <div class="title-group">
             <span class="title-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <a href="#form">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14M5 12h14" />
-                </svg>
+                    </svg>
+                </a>
+               
             </span>
             <div>
                 <h3>Add Transaction</h3>
@@ -97,13 +108,11 @@
         on:click={() => (showQuickTools = !showQuickTools)}
         aria-expanded={showQuickTools}
     >
-        {showQuickTools ? "Hide quick actions & imports" : "Show quick actions & imports"}
+        {showQuickTools ? "Close" : " Import from Email/CSV"}
     </button>
 
     <div class="card-section top-panels" class:collapsed={!showQuickTools}>
-        <QuickActions on:prefill={(e) => prefillForm(e.detail)}/>
-
-        <section class="barchips import-card">
+        <section  class="barchips import-card">
            
             <div class="import-body">
                 <div class="import-chips">
@@ -124,11 +133,12 @@
     </div>
 
     <div class="card-body">
-        <form class="grid transaction-form" on:submit|preventDefault={submit}>
-        <input type="date" bind:value={form.date}>
+        <QuickActions on:prefill={(e) => prefillForm(e.detail)}/>
+        <form id="form" class="grid transaction-form" on:submit|preventDefault={submit}>
+        <input style="width: auto;" type="date" bind:value={form.date}>
 
         <select bind:value={form.transactionType} class:prefilled={prefilled.transactionType} required>
-            <option value="" disabled selected>Select transaction type</option>
+            <option value="" disabled>Select transaction type</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
         </select>
@@ -138,7 +148,7 @@
         <input type="number" placeholder="Amount" step="0.01" bind:value={form.amount} class:prefilled={prefilled.amount} min="0" required>
 
         <select bind:value={form.categoryUuid} class:prefilled={prefilled.categoryUuid} required>
-            <option value="" disabled selected>Select category</option>
+            <option value="" disabled>Select category</option>
             {#each filteredCategories as category}
                 <option value={category.uuid}>{category.name}</option>
             {/each}
@@ -223,6 +233,20 @@
         width: 100%;
     }
 
+    .transaction-form select {
+        position: relative;
+        z-index: 2;
+        appearance: auto;
+        -webkit-appearance: menulist;
+        background-color: var(--surface-1);
+        color: var(--text-main);
+    }
+
+    .transaction-form input[type="date"] {
+        max-width: 100%;
+        min-width: 0;
+    }
+
     .submit-btn {
         grid-column: 1 / -1;
         justify-self: end;
@@ -290,6 +314,16 @@
 
     
     @media (max-width: 720px) {
+        .transaction-form select {
+            font-size: 0.9rem;
+            padding: 0.65rem 0.75rem;
+        }
+
+        .transaction-form input[type="date"] {
+            font-size: 0.9rem;
+            padding: 0.65rem 0.75rem;
+        }
+
         .quick-tools-toggle {
             display: block;
             width: 100%;
@@ -313,6 +347,7 @@
 
         .import-chips {
             gap: 0.35rem;
+            flex-wrap: wrap;
         }
 
         .chip {
