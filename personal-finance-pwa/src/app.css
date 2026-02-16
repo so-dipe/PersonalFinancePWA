@@ -288,6 +288,7 @@ select:focus {
     position: relative;
     max-width: 100%;
     overflow-x: hidden;
+    /* overflow-y: hidden; */
 }
 
 /* .app-shell {
@@ -451,3 +452,10 @@ tbody tr:hover {
         margin-left: 280px;
     }
 }
+
+/* @media (max-width: 720px) {
+    .app-shell {
+        height: 70vh;
+        margin-bottom: 100px;
+    }
+} */

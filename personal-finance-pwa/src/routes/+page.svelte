@@ -31,7 +31,7 @@
 
 <main class="dashboard">
     <div class="dashboard-grid">
-        <section class="dashboard-column overview-totals">
+        <!-- <section class="dashboard-column overview-totals">
             <div class="card">
                 <Totals
                     start={startOfMonth}
@@ -39,7 +39,7 @@
                     categoriesUuids={allCategoryUuids}
                 />
             </div>
-        </section>
+        </section> -->
         {#if showForm}
             <section class="dashboard-column">
                 <div class="card">
