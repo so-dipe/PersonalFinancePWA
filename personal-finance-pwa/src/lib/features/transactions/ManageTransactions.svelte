@@ -9,6 +9,7 @@
     import { getActiveCategories } from "$lib/domains/categories";
     import { useSetting } from "$lib/domains/settings";
     import { notify } from "$lib/stores/notification.store";
+    import { syncState } from "$lib/stores/sync.store";
     import TransactionRow from "./TransactionRow.svelte";
 
     let categories;
@@ -152,7 +153,8 @@
         {#if $sync?.enabled}
             <small>
                 (<a class="sync-status" on:click={manualSync}>
-                    Last synced: {formatDateTime(new Date($sync?.lastSync))}
+                    {$syncState.inProgress ? $syncState.message : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}` }
+                    <!-- Last synced: {formatDateTime(new Date($sync?.lastSync))} -->
                 </a>)
             </small>
         {/if}

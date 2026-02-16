@@ -4,6 +4,7 @@
     import { formatDateTime } from "$lib/utils";
     import { runSync } from "$lib/sync/runSync";
     import { notify } from "$lib/stores/notification.store";
+    import { syncState } from "$lib/stores/sync.store";
     import { cloudStorageProviders } from "$lib/providers";
     import { CLOUD_STORAGE_PROVIDERS_NAME_MAP } from "$lib/constants/constants";
     import { get } from "svelte/store";
@@ -16,7 +17,6 @@
     $: provider = selectedProvider ? cloudStorageProviders[selectedProvider] : null;
 
     let isConnecting = false;
-    let isSyncing = false;
 
     async function connectProvider() {
         if (!provider) return;
@@ -72,16 +72,13 @@
     }
 
     async function manualSync() {
-        if (isSyncing) return;
-        isSyncing = true;
+        if ($syncState.inProgress) return;
         try{
             await runSync();
             notify({ type: "success", message: "Synced!🎉"})
         } catch (err) {
             notify({ type: "error", message: "Sync Failed.❌"})
-        } finally {
-            isSyncing = false;
-        }
+        } 
     }
     $: connectionStatus = $sync?.enabled ? `Connected to ${CLOUD_STORAGE_PROVIDERS_NAME_MAP[$sync?.provider]} as ${$account?.name}` : "Not Connected"
 </script>
@@ -107,7 +104,8 @@
                 <br>
                 <a class="sync-status" on:click={manualSync}>
                     {$sync?.enabled 
-                        ? `Last synced: ${formatDateTime(new Date($sync?.lastSync))} ${isSyncing ? "(Syncing...)": ""}`: ""
+                        ? `Last synced: ${formatDateTime(new Date($sync?.lastSync))} ${$syncState.inProgress ? $syncState.message : ""}`
+                        : ""
                     }
                 </a>
             </p>
