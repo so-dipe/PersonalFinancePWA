@@ -102,12 +102,14 @@
                     {/each}
                 </select>
                 <br>
+                {#if $sync?.enabled}
                 <a class="sync-status" on:click={manualSync}>
-                    {$sync?.enabled 
-                        ? `Last synced: ${formatDateTime(new Date($sync?.lastSync))} ${$syncState.inProgress ? $syncState.message : ""}`
-                        : ""
+                    {$syncState.inProgress
+                        ? $syncState.message
+                        : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}`
                     }
                 </a>
+                {/if}
             </p>
         </div>
     </div>
