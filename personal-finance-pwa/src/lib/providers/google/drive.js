@@ -57,7 +57,7 @@ export async function updateFile(fileId, data) {
     if(!response.ok) throw new Error('Failed to update file');
 }
 
-export async function listDriveFiles(entityName) {
+export async function listDriveFiles(entityName, lastSynced) {
     const token = await ensureDriveToken({ interactive: true});
     if (!token) throw new Error('Drive access not granted');
 
@@ -66,17 +66,26 @@ export async function listDriveFiles(entityName) {
     let allFiles = [];
     let pageToken = null;
 
-    do {
-        const response = await gapi.client.drive.files.list({
-            spaces: 'appDataFolder',
-            q: `name contains '${entityName}'`,
-            fields: `files(id,name,appProperties)`,
-            pageSize: 1000,
-            pageToken: pageToken
-        });
-        allFiles.push(...(response.result.files || []));
-        pageToken = response.result.nextPageToken;
-    } while (pageToken);
+    const filters = [`name contains '${entityName.replace(/'/g, "\\'")}'`];
+    if (lastSynced) filters.push(`modifiedTime > '${new Date(lastSynced).toISOString()}'`);
+    const query = filters.join(' and ');
+
+    try {
+        do {
+            const response = await gapi.client.drive.files.list({
+                spaces: 'appDataFolder',
+                q: query,
+                fields: `nextPageToken, files(id,name,modifiedTime,appProperties)`,
+                pageSize: 1000,
+                pageToken: pageToken
+            });
+            allFiles.push(...(response.result.files || []));
+            pageToken = response.result.nextPageToken;
+        } while (pageToken);
+    } catch (e) {
+        console.error(e);
+        throw new Error('Failed to list files');
+    }
 
     return allFiles;
 }
