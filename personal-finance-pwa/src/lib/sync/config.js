@@ -1,10 +1,14 @@
 export const SYNC_ENTITIES = {
+    categories: {
+        store: 'categories',
+        dedupeByFingerprint: true
+    },
     transactions: {
         store: 'transactions',
         dedupeByFingerprint: true
     },
-    categories: {
-        store: 'categories',
+    budgets: {
+        store: 'budgets',
         dedupeByFingerprint: true
     },
     settings : {
