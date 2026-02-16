@@ -62,13 +62,23 @@ export async function listDriveFiles(entityName) {
     if (!token) throw new Error('Drive access not granted');
 
     gapi.client.setToken({access_token: token});
-    const response = await gapi.client.drive.files.list({
-        spaces: 'appDataFolder',
-        q: `name contains '${entityName}'`,
-        fields: `files(id,name,appProperties)`
-    });
 
-    return response.result?.files;
+    let allFiles = [];
+    let pageToken = null;
+
+    do {
+        const response = await gapi.client.drive.files.list({
+            spaces: 'appDataFolder',
+            q: `name contains '${entityName}'`,
+            fields: `files(id,name,appProperties)`,
+            pageSize: 1000,
+            pageToken: pageToken
+        });
+        allFiles.push(...(response.result.files || []));
+        pageToken = response.result.nextPageToken;
+    } while (pageToken);
+
+    return allFiles;
 }
 
 export async function downloadFile(fileID) {
