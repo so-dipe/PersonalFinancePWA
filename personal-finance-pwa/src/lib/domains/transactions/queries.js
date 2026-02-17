@@ -13,7 +13,7 @@ export function getFrequentTransactions(limit=10) {
                     const key = JSON.stringify({
                         transactionType: tx.transactionType,
                         description: tx.description,
-                        amount: tx.amount,
+                        amount: 0, //tx.amount,
                         categoryUuid: tx.categoryUuid
                     });
                     frequencyMap[key] = (frequencyMap[key] || 0) + 1;
