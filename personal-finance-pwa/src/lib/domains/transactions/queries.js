@@ -12,7 +12,7 @@ export function getFrequentTransactions(limit=10) {
                 for (const tx of transactions) {
                     const key = JSON.stringify({
                         transactionType: tx.transactionType,
-                        description: tx.description?.trim().toLowercase(),
+                        description: tx.description?.trim().toLowerCase(),
                         amount: 0, //tx.amount,
                         categoryUuid: tx.categoryUuid
                     });
