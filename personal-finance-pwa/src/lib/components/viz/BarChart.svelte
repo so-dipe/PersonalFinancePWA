@@ -199,8 +199,9 @@
             .call(d3.axisBottom(x));
 
         xAxis.selectAll("text")
-            .attr("dy", "0.7em")
-            .call(wrap, x.bandwidth());
+            .attr("transform", "rotate(-15)")
+            .attr("dy", "0.7em");
+            // .call(wrap, x.bandwidth());
 
     }
 
