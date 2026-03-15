@@ -5,7 +5,7 @@
     import RecentTransactions from '$lib/features/transactions/RecentTransactions.svelte';
     import { useSetting } from '$lib/domains/settings';
     import Totals from '$lib/features/insights/Totals.svelte';
-    import { categories } from '$lib/domains/categories';
+    import { useCategories } from '$lib/domains/categories';
 
     const syncSetting = useSetting('sync');
     let showForm = true;
@@ -13,6 +13,8 @@
     const today = new Date();
     let startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     let endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const categories = useCategories();
 
     $: allCategoryUuids = $categories?.map((c) => c.uuid) ?? [];
 

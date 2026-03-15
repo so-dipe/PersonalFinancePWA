@@ -1,6 +1,7 @@
 <script>
     import { 
         loadDefaultCategories,
+        useCategories,
         addCategory,
         editCategory,
         deleteCategory,
@@ -11,7 +12,6 @@
     import { notify } from "$lib/stores/notification.store";
     import { TRANSACTION_TYPE_LABELS } from "$lib/constants/constants";
 
-    let categories = [];
     let editingId = null;
     let editName = '';
     let editType = '';
@@ -19,26 +19,7 @@
     let newName = '';
     let newType = 'expense';
 
-    async function loadCategories() {
-        try {
-            let cats = await getActiveCategories();
-            if (cats.length === 0) {
-                await loadDefaultCategories();
-                cats = await getActiveCategories();
-            }
-            categories = cats.sort((a, b) => {
-                if (a.transactionType !== b.transactionType) {
-                    return a.transactionType === "Income" ? -1 : 1;
-                }
-                return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-            });
-        } catch (e) {
-            console.error(e);
-            notify({ type: "error", message: "Failed to load categories" });
-        }
-    }
-
-    onMount(loadCategories);
+    const categories = useCategories();
 
     async function addNewCategory() {
         if (!newName.trim()) return;
@@ -86,7 +67,6 @@
 
         try {
             await deleteCategory(cat.id);
-            categories = categories.filter(c => c.id !== cat.id);
             notify({ type: "success", message: "Category deleted" });
         } catch (err) {
             notify({ type: "error", message: "Failed to delete category" });
@@ -114,7 +94,7 @@
         <p class="text-muted">No categories available.</p>
     {/if}
 
-    {#each categories as cat}
+    {#each $categories as cat}
         <div class="category-row">
             {#if editingId === cat.id}
                 <input 

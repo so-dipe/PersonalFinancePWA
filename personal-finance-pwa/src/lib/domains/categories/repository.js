@@ -1,11 +1,12 @@
-import { DEFAULT_CATEGORIES } from "$lib/constants/default.categories";
 import { db } from "$lib/db";
 import { makeFingerprint } from "./fingerprint";
 import { Category } from "./model";
 import { normalizeCategory } from "./normalize";
 import { validateCategory } from "./rules";
 import { v5 as uuidV5 } from "uuid";
-import { SYSTEM_NAMESPACE } from "$lib/constants/constants";
+import { SYSTEM_NAMESPACE, SYSTEM_TIME } from "$lib/constants/constants";
+import { DEFAULT_CATEGORIES } from "$lib/constants/default.categories";
+
 
 export async function getOrCreateCategory(name, transactionType, options = {}) {
     const now = new Date().toISOString();
@@ -65,7 +66,7 @@ export async function getOrCreateCategory(name, transactionType, options = {}) {
 }
 
 export async function loadDefaultCategories() {
-    const now = new Date().toISOString();
+    const systemTime = new Date(SYSTEM_TIME).toISOString();
 
     for (const [key, cat] of Object.entries(DEFAULT_CATEGORIES)) {
         const uuid = uuidV5(`${key}:${cat.transactionType}`, SYSTEM_NAMESPACE);
@@ -85,8 +86,8 @@ export async function loadDefaultCategories() {
             name: cat.name,
             transactionType: cat.transactionType,
             system: 1,
-            createdAt: now,
-            modifiedAt: now,
+            createdAt: systemTime,
+            modifiedAt: systemTime,
             deleted: 0,
             synced: 1
         });

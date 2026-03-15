@@ -1,13 +1,6 @@
 import { db } from "$lib/db";
 import { reconcileByFingerprint } from "./reconcile";
 import { SYNC_ENTITIES } from "./config";
-// import { makeFingerprint as makeTxnFingerprint } from "$lib/domains/transactions";
-// import { makeFingerprint as makeCatFingerprint } from "$lib/domains/categories";
-
-// const FINGERPRINT_BUILDERS = {
-//     transactions: makeTxnFingerprint,
-//     categories: makeCatFingerprint
-// }
 
 function extractRemoteProps(file) {
     return {

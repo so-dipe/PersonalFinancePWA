@@ -1,3 +1,5 @@
+export const SYSTEM_TIME = "1970-01-01T00:00:00.000Z";
+
 export const SYSTEM_NAMESPACE = "8a0680f4-45a4-4424-9000-e71b582e5d80";
 
 export const TRANSACTION_TYPES = ['expense', 'income'];

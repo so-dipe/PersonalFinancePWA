@@ -1,12 +1,14 @@
 <script>
     import CalloutCard from "$lib/components/viz/CalloutCard.svelte";
-    import { categories } from "$lib/domains/categories";
+    import { useCategories } from "$lib/domains/categories";
     import { totals } from "$lib/domains/insights";
     import { formatFinancial } from "$lib/utils";
 
     export let start;
     export let end;
     export let categoriesUuids;
+
+    const categories = useCategories();
 
     $: selectedCategories = $categories?.filter(c => categoriesUuids.includes(c.uuid)) ?? [];
 

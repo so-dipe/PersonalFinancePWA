@@ -4,7 +4,7 @@
     import CalendarHeatmap from "$lib/components/viz/CalendarHeatmap.svelte";
     import CategorySelector from "$lib/components/CategorySelector.svelte";
     import TransactionsInTheLastYear from "$lib/features/insights/TransactionsInTheLastYear.svelte";
-    import { categories, useCategories } from "$lib/domains/categories";
+    import { useCategories } from "$lib/domains/categories";
     import TotalByCategory from "$lib/features/insights/TotalByCategory.svelte";
     import Totals from "$lib/features/insights/Totals.svelte";
 
@@ -13,6 +13,8 @@
     let end = new Date();
 
     let selectedCategoriesUuids = [];
+
+    const categories = useCategories();
 
 </script>
 
