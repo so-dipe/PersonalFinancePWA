@@ -8,7 +8,6 @@ export async function addBudget(bdgt) {
     validateBudget(budget);
 
     const fingerprint = makeFingerprint(budget);
-    console.log(fingerprint);
 
     try {
         await db.budgets.add({
@@ -30,8 +29,8 @@ export async function addBudget(bdgt) {
     }
 }
 
-export async function editBudget(idOrUuid, updates) {
-    const budget = await db.budgets.get(idOrUuid);
+export async function editBudget(uuid, updates) {
+    const budget = await db.budgets.where('uuid').equals(uuid).first();
     if (!budget) throw { code: 'BUDGET_NOT_FOUND'};
 
     const updatedBudget = normalizeBudget({ ...budget, ...updates });
@@ -50,12 +49,12 @@ export async function editBudget(idOrUuid, updates) {
     }
 }
 
-export async function deleteBudget(idOrUuid) {
-    const budget = await db.budgets.get(idOrUuid);
+export async function deleteBudget(uuid) {
+    const budget = await db.budgets.where('uuid').equals(uuid).first();
     if (!budget) throw { code: 'BUDGET_NOT_FOUND'};
 
     try {
-        await db.budgets.update(idOrUuid, {
+        await db.budgets.update(budget.id, {
             deleted: 1,
             synced: 0,
             modifiedAt: new Date().toISOString()

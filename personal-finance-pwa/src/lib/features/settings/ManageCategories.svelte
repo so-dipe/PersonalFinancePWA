@@ -1,15 +1,14 @@
 <script>
-    import { 
-        loadDefaultCategories,
+    import {
         useCategories,
         addCategory,
         editCategory,
-        deleteCategory,
-        getActiveCategories
+        deleteCategory
      } from "$lib/domains/categories";
     import SettingsAccordion from "./SettingsAccordion.svelte";
     import { onMount } from "svelte";
     import { notify } from "$lib/stores/notification.store";
+    import { errorToNotification } from "$lib/stores/notification.mapper";
     import { TRANSACTION_TYPE_LABELS } from "$lib/constants/constants";
 
     let editingId = null;
@@ -22,16 +21,22 @@
     const categories = useCategories();
 
     async function addNewCategory() {
-        if (!newName.trim()) return;
+        const name = newName.trim();
+        if (!name) return;
 
         try {
             await addCategory(newName.trim(), newType);
-            notify({ type: "success", message: `Category "${newName}" added` });
+
+            notify({ 
+                type: "success", 
+                message: `Category "${newName}" added`
+             });
+
             newName = "";
             newType = "expense";
-            await loadCategories();
-        } catch (err) {
-            notify({ type: "error", message: "Category already exists" });
+
+        } catch (e) {
+            errorToNotification(e);
         }
     }
 

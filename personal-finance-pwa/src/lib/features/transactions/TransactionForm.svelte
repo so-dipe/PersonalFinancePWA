@@ -1,5 +1,5 @@
 <script>
-    import { getActiveCategories, loadDefaultCategories } from "$lib/domains/categories";
+    import { useCategories } from "$lib/domains/categories";
     import { getSetting } from "$lib/domains/settings";
     import { addTransaction } from "$lib/domains/transactions";
     import { errorToNotification } from "$lib/stores/notification.mapper";
@@ -12,7 +12,8 @@
     import { notify } from "$lib/stores/notification.store";
 
 
-    let categories = [];
+    const categories = useCategories();
+
     let filteredCategories = [];
 
     let form = getDefaultTransactionForm();
@@ -26,17 +27,6 @@
         categoryUuid: false
     };
 
-    onMount(async () => {
-        categories = await getActiveCategories();
-        if (!categories.length) {
-            await loadDefaultCategories();
-            categories = await getActiveCategories();
-        }
-        if (!form.transactionType) {
-            form.transactionType = "expense";
-        }
-    });
-
     function resetForm() {
         form = getDefaultTransactionForm();
     }
@@ -45,7 +35,7 @@
         if (data.transactionType) {
             data.transactionType = data.transactionType.toLowerCase();
         }
-        if (data.categoryUuid && !categories.find(c => c.uuid === data.categoryUuid)) {
+        if (data.categoryUuid && !categories?.find(c => c.uuid === data.categoryUuid)) {
             data.categoryUuid = ""
         }
         form = {...form, ...data};
@@ -60,12 +50,9 @@
 
     }
 
-
-
-
-    
-
-    $: filteredCategories = form.transactionType ? categories.filter((c) => c.transactionType === form.transactionType) : [];
+    $: filteredCategories = form.transactionType 
+        ? $categories?.filter((c) => c.transactionType === form.transactionType) 
+        : [];
 
     async function submit() {
         submitting = true;

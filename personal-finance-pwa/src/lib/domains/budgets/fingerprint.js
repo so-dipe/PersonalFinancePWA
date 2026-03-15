@@ -1,5 +1,4 @@
 export function makeFingerprint(budget) {
-    console.log(budget);
     return [
         budget.categoryUuid,
         budget.description,
