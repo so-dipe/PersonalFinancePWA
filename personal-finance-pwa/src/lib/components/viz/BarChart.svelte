@@ -43,6 +43,44 @@
             .text("No data to display")
     }
 
+    function wrap(text, width) {
+        text.each(function () {
+            const textEl = d3.select(this);
+            const words = textEl.text().split(/\s+/).reverse();
+
+            let word;
+            let line = [];
+            let lineNumber = 0;
+
+            const lineHeight = 1.1;
+            const y = textEl.attr("y");
+            const dy = parseFloat(textEl.attr("dy") || 0);
+
+            let tspan = textEl.text(null)
+                .append("tspan")
+                .attr("x", 0)
+                .attr("y", y)
+                .attr("dy", dy + "em");
+
+            while (word = words.pop()) {
+                line.push(word);
+                
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = textEl.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", y)
+                        .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                        .text(word);
+                }
+            }
+        });
+    }
+
     function render(data, width, height) {
         if (!width || !svg) return;
 
@@ -156,9 +194,13 @@
             .attr
 
         // Axes
-        g.append("g")
+        const xAxis = g.append("g")
             .attr("transform", `translate(0,${innerHeight})`)
             .call(d3.axisBottom(x));
+
+        xAxis.selectAll("text")
+            .attr("dy", "0.7em")
+            .call(wrap, x.bandwidth());
 
     }
 
