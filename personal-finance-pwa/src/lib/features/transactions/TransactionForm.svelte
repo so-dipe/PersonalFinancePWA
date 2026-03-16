@@ -35,7 +35,7 @@
         if (data.transactionType) {
             data.transactionType = data.transactionType.toLowerCase();
         }
-        if (data.categoryUuid && !categories?.find(c => c.uuid === data.categoryUuid)) {
+        if (data.categoryUuid && !$categories?.find(c => c.uuid === data.categoryUuid)) {
             data.categoryUuid = ""
         }
         form = {...form, ...data};
