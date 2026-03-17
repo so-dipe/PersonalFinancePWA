@@ -29,7 +29,7 @@ export function summariseTransactionsByCategories(start, end) {
 
         return Object.entries(summary).map(([categoryUuid, total]) => ({
             categoryUuid: categoryUuid,
-            category: categoryMap[categoryUuid] ?? null,
+            category: categoryMap[categoryUuid] ?? {uuid: "xyz", name: "Unknown", transactionType: "Expense"},
             total
         }));
     })
