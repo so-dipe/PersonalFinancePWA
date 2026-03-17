@@ -12,20 +12,22 @@ export function useLazyTransactions() {
     });
 
     async function loadMore() {
-        update(state => ({...state, loading: true}));
-
         let state;
         update(s => {
             state = s;
-            return s;
+            return {...s, loading: true};
         });
 
-        const txns = await db.transactions
+        const nextBatch = await db.transactions
             .where('deleted')
             .equals(0)
-            .sortBy('createdAt');
+            // .orderBy('id')
+            .offset(state.offset)
+            .limit(BATCH_SIZE)
+            // .orderBy('id')
+            .toArray();
 
-        const nextBatch = txns.slice(state.offset, state.offset + BATCH_SIZE);
+        // const nextBatch = txns.slice(state.offset, state.offset + BATCH_SIZE);
 
         update(state => ({
             transactions: [...state.transactions, ...nextBatch],
