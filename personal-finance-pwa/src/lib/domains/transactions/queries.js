@@ -1,5 +1,42 @@
 import { liveQuery } from "dexie";
 import { db } from "$lib/db";
+import { writable } from "svelte/store";
+import { BATCH_SIZE } from "$lib/constants/constants";
+
+export function useLazyTransactions() {
+    const { subscribe, set, update } = writable({
+        transactions: [],
+        loading: false,
+        offset: 0,
+        hasMore: true,
+    });
+
+    async function loadMore() {
+        update(state => ({...state, loading: true}));
+
+        let state;
+        update(s => {
+            state = s;
+            return s;
+        });
+
+        const txns = await db.transactions
+            .where('deleted')
+            .equals(0)
+            .sortBy('createdAt');
+
+        const nextBatch = txns.slice(state.offset, state.offset + BATCH_SIZE);
+
+        update(state => ({
+            transactions: [...state.transactions, ...nextBatch],
+            loading: false,
+            offset: state.offset + nextBatch.length,
+            hasMore: nextBatch.length === BATCH_SIZE
+        }));
+    }
+
+    return { subscribe, loadMore }
+}
 
 export function getFrequentTransactions(limit=10) {
     return liveQuery(() => 

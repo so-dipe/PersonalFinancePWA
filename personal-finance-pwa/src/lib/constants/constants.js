@@ -36,3 +36,5 @@ export const PROFILE_PHOTOS = [
     "/profile/7.png",
     "/profile/8.png"
 ]
+
+export const BATCH_SIZE = 50;

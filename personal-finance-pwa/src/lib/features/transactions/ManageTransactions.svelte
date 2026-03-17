@@ -5,35 +5,34 @@
     import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
     import { runSync } from "$lib/sync/runSync";
     import { db } from "$lib/db";
-    import { editTransaction, deleteTransaction, useTransactions } from "$lib/domains/transactions";
-    import { getActiveCategories } from "$lib/domains/categories";
+    import { editTransaction, deleteTransaction, useTransactions, useLazyTransactions } from "$lib/domains/transactions";
+    import { useCategories } from "$lib/domains/categories";
     import { useSetting } from "$lib/domains/settings";
     import { notify } from "$lib/stores/notification.store";
     import { syncState } from "$lib/stores/sync.store";
     import TransactionRow from "./TransactionRow.svelte";
 
-    let categories;
+    const categories = useCategories();
     let filteredCategories;
 
-    onMount(async () => {
-        categories = await getActiveCategories();
-        if (!categories.length) {
-            await loadDefaultCategories();
-            categories = await getActiveCategories();
-        }
+    const lazyTransactions = useLazyTransactions();
+    
+    let observer;
+
+    onMount(() => {
+        lazyTransactions.loadMore();
     });
+
+    function onScroll(event) {
+        const wrapper = event.target;
+        if (wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 50) {
+            $lazyTransactions.hasMore && lazyTransactions.loadMore();
+        }
+    }
 
     let editingTx = null;
 
     const sync = useSetting('sync');
-
-    const transactions = readable([], (set) => {
-        const sub = useTransactions().subscribe({
-            next: set,
-            error: console.error
-        });
-        return () => sub.unsubscribe();
-    })
 
     async function manualSync() {
         try {
@@ -166,7 +165,7 @@
     </div>
     </div>
    
-    <div class="table-wrapper">
+    <div class="table-wrapper" on:scroll={onScroll}>
     <table>
         <thead>
             <tr>
@@ -182,12 +181,12 @@
             </tr>
         </thead>
         <tbody>
-            {#if !$transactions}
+            {#if !$lazyTransactions}
                 <tr><td colspan="7">Loading...</td></tr>
-            {:else if $transactions.length === 0}
+            {:else if $lazyTransactions.length === 0}
                 <tr><td colspan="7">No transactions found.</td></tr>
             {:else}
-                {#each $transactions as tx (tx.id)}
+                {#each $lazyTransactions.transactions as tx (tx.id)}
                     <TransactionRow
                         {tx}
                         isEditing={editingTx?.id === tx.id}
@@ -199,6 +198,9 @@
                         onDelete={() => handleDelete(tx)}
                     />
                 {/each}
+            {/if}
+            {#if $lazyTransactions?.loading}
+                <tr><td colspan="7">Loading more transactions...</td></tr>
             {/if}
         </tbody>
     </table>
