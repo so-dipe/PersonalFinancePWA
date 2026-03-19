@@ -1,4 +1,4 @@
-import { liveQuery } from "dexie";
+import Dexie, { liveQuery } from "dexie";
 import { db } from "$lib/db";
 import { writable } from "svelte/store";
 import { BATCH_SIZE } from "$lib/constants/constants";
@@ -7,7 +7,7 @@ export function useLazyTransactions() {
     const { subscribe, set, update } = writable({
         transactions: [],
         loading: false,
-        offset: 0,
+        lastDate: 0,
         hasMore: true,
     });
 
@@ -18,16 +18,33 @@ export function useLazyTransactions() {
             return {...s, loading: true};
         });
 
+        // let collection = db.transactions
+        //     .where('[deleted+date]')
+        //     .between([0, Dexie.minKey], [0, Dexie.maxKey])
+        //     .reverse();
+
+        // if (state.lastDate) {
+        //     collection = collection.filter(tx => tx.date < state.lastDate);
+        // }
+
+        // const nextBatch = await collection
+        //     .limit(BATCH_SIZE)
+        //     .toArray();
+
+        // update(s => ({
+        //     transactions: [...s.transactions, ...nextBatch],
+        //     loading: false,
+        //     lastDate: nextBatch.at(-1)?.date ?? s.lastDate,
+        //     hasMore: nextBatch.length === BATCH_SIZE
+        // }));
+
         const nextBatch = await db.transactions
-            .where('deleted')
-            .equals(0)
-            // .orderBy('id')
+            .where('[deleted+date]')
+            .between([0, Dexie.minKey], [0, Dexie.maxKey])
+            .reverse()
             .offset(state.offset)
             .limit(BATCH_SIZE)
-            // .orderBy('id')
             .toArray();
-
-        // const nextBatch = txns.slice(state.offset, state.offset + BATCH_SIZE);
 
         update(state => ({
             transactions: [...state.transactions, ...nextBatch],
