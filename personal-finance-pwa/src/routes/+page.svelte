@@ -10,13 +10,13 @@
     const syncSetting = useSetting('sync');
     let showForm = true;
 
-    const today = new Date();
-    let startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    let endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // const today = new Date();
+    // let startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    // let endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const categories = useCategories();
+    // const categories = useCategories();
 
-    $: allCategoryUuids = $categories?.map((c) => c.uuid) ?? [];
+    // $: allCategoryUuids = $categories?.map((c) => c.uuid) ?? [];
 
     async function bootstrapApp() {
         try {

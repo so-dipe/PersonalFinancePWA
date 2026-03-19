@@ -2,12 +2,25 @@ import Dexie, { liveQuery } from "dexie";
 import { db } from "$lib/db";
 import { writable } from "svelte/store";
 import { BATCH_SIZE } from "$lib/constants/constants";
+import { getActiveCategories } from "../categories";
+
+async function mapTransactionsWithCategories(transactions, categories) {
+    const categoryMap = Object.fromEntries(
+        categories.map(c => [c.uuid, c.name])
+    );
+
+    return transactions.map(tx => ({
+        ...tx,
+        category: categoryMap[tx.categoryUuid] ?? 'Unknown'
+    }))
+}
 
 export function useLazyTransactions() {
     const { subscribe, set, update } = writable({
         transactions: [],
         loading: false,
-        lastDate: 0,
+        offset: 0,
+        // lastDate: 0,
         hasMore: true,
     });
 
@@ -17,6 +30,8 @@ export function useLazyTransactions() {
             state = s;
             return {...s, loading: true};
         });
+
+        const categories = await getActiveCategories();
 
         // let collection = db.transactions
         //     .where('[deleted+date]')
@@ -46,8 +61,10 @@ export function useLazyTransactions() {
             .limit(BATCH_SIZE)
             .toArray();
 
+        const enriched = await mapTransactionsWithCategories(nextBatch, categories);
+
         update(state => ({
-            transactions: [...state.transactions, ...nextBatch],
+            transactions: [...state.transactions, ...enriched],
             loading: false,
             offset: state.offset + nextBatch.length,
             hasMore: nextBatch.length === BATCH_SIZE
@@ -79,73 +96,44 @@ export function getFrequentTransactions(limit=10) {
                     .slice(0, limit)
                     .map(([key]) => JSON.parse(key));
                 
-                const categories = await db.categories.toArray();
-                const categoryMap = Object.fromEntries(categories.map(c => [c.uuid, c.name]));
+                const categories = await getActiveCategories();
 
-                return sortedTransactions.map(tx => ({
-                    ...tx,
-                    category: categoryMap[tx.categoryUuid] ?? 'Unknown'
-                }));
+                const enriched = await mapTransactionsWithCategories(sortedTransactions, categories);
+                return enriched;
             })
     );
 }
 
 export function useRecentTransactions(limit) {
     return liveQuery(async () => {
-        const [txs, categories] = await Promise.all([
+        const [txns, cats] = await Promise.all([
             db.transactions
                 .orderBy('date')
                 .reverse()
                 .filter(tx => tx.deleted === 0)
                 .limit(limit)
                 .toArray(),
-            db.categories
-                .where('deleted')
-                .equals(0)
-                .toArray()
+            getActiveCategories()
         ]);
-        const categoryMap = Object.fromEntries(
-            categories.map(c => [c.uuid, c.name])
-        );
-        return txs.map(tx => ({
-            id: tx.id,
-            uuid: tx.uuid,
-            date: tx.date,
-            transactionType: tx.transactionType,
-            description: tx.description,
-            amount: tx.amount,
-            category: categoryMap[tx.categoryUuid] ?? 'Unknown',
-            synced: tx.synced
-        }));
+
+        const enriched = await mapTransactionsWithCategories(txns, cats);
+        return enriched;
     });
 }
 
 export function useTransactions() {
     return liveQuery(async () => {
-        const [txs, categories] = await Promise.all([
+        const [txns, cats] = await Promise.all([
             db.transactions
                 .orderBy('date')
                 .reverse()
                 .filter(tx => tx.deleted === 0)
                 .toArray(),
-            db.categories
-                .where('deleted')
-                .equals(0)
-                .toArray()
+            getActiveCategories()
         ]);
-        const categoryMap = Object.fromEntries(
-            categories.map(c => [c.uuid, c.name])
-        );
-        return txs.map(tx => ({
-            id: tx.id,
-            uuid: tx.uuid,
-            date: tx.date,
-            transactionType: tx.transactionType,
-            description: tx.description,
-            amount: tx.amount,
-            category: categoryMap[tx.categoryUuid] ?? 'Unknown',
-            synced: tx.synced
-        }));
+
+        const enriched = await mapTransactionsWithCategories(txns, cats);
+        return enriched;
     });
 }
 

@@ -1,4 +1,5 @@
 import Dexie from "dexie";
+import { loadDefaultCategories } from "./domains/categories";
 
 export const db = new Dexie("FinanceDB")
 
@@ -53,4 +54,7 @@ db.version(2).stores({
         periodUnit, periodCount, startDate,
         synced, deleted, createdAt, modifiedAt
     `
-})
+});
+
+db.on("populate", loadDefaultCategories);
+db.on("ready", loadDefaultCategories);
