@@ -22,7 +22,14 @@
     let selectedCategoriesUuids = [];
 
     const params = writable({ startStr, endStr, selectedCategoriesUuids });
-    $: params.set({ startStr, endStr, selectedCategoriesUuids });
+    $: {
+        params.update(p => ({
+            ...p,
+            startStr,
+            endStr,
+            selectedCategoriesUuids
+        }));
+    }
 
     const insightsData = derived(params, ($p, set) => {
         const query = liveInsights($p.startStr, $p.endStr, $p.selectedCategoriesUuids);
