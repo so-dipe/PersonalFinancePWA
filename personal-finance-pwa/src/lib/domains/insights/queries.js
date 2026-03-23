@@ -131,6 +131,8 @@ export function liveInsights(start, end, selectedCategoryUuids = []) {
             getActiveCategories()
         ]);
 
+        console.log("transactions", transactions, start, end);
+
         const categoryMap = indexByUuid(categories);
 
         let totalIncome = 0;

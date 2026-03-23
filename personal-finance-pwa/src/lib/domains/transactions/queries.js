@@ -45,7 +45,6 @@ export function useLazyTransactions() {
             .toArray();
 
         const enriched = await mapTransactionsWithCategories(nextBatch, categories);
-        console.log(enriched);
 
         const lastItem = nextBatch.at(-1);
 

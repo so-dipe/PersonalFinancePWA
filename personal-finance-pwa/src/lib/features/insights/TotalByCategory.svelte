@@ -1,12 +1,8 @@
 <script>
     import BarChart from "$lib/components/viz/BarChart.svelte";
     import BarChartTooltip from "$lib/components/viz/BarChartTooltip.svelte";
-    import { summariseTransactionsByCategories } from "$lib/domains/insights";
 
-    export let start;
-    export let end;
-
-    export let categoriesUuids = [];
+    export let data;
 
     let hovered = null;
 
@@ -15,30 +11,19 @@
         expense: "var(--red-700)"
     }
 
-    $: startStr = start?.toISOString().slice(0, 10);
-    $: endStr = end?.toISOString().slice(0, 10);
-
-    let dataStore;
     let barChartData = [];
 
-    $: if (startStr && endStr) {
-        dataStore = summariseTransactionsByCategories(startStr, endStr);
-    }
-
-    $: if (dataStore && categoriesUuids) {
-        const rawData = $dataStore ?? [];
-        let filtered = categoriesUuids.length > 0
-            ? rawData.filter(d => categoriesUuids.includes(d.category.uuid))
-            : rawData;
+    $: if (data) {
+        const rawData = data ?? [];
 
         const typeOrder = { income: 0, expense: 1}
-        filtered.sort((a, b) => {
+        rawData.sort((a, b) => {
             const typeDiff = typeOrder[a.category.transactionType] - typeOrder[b.category.transactionType];
             if (typeDiff !== 0) return typeDiff;
             return b.total - a.total;
         })
 
-        barChartData = filtered.map(d => ({
+        barChartData = rawData.map(d => ({
             x: d.category.name,
             y: d.total,
             color: TYPE_COLORS[d.category.transactionType]

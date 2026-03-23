@@ -7,20 +7,25 @@
     import { useCategories } from "$lib/domains/categories";
     import TotalByCategory from "$lib/features/insights/TotalByCategory.svelte";
     import Totals from "$lib/features/insights/Totals.svelte";
+    import { liveInsights } from "$lib/domains/insights";
 
 
     let start = new Date();
     let end = new Date();
 
+    $: startStr = start.toISOString().slice(0, 10);
+    $: endStr = end.toISOString().slice(0, 10);
+
     let selectedCategoriesUuids = [];
 
     const categories = useCategories();
+
+    $: insightsData = liveInsights(startStr, endStr, selectedCategoriesUuids);
 
 </script>
 
 <div class="page">
     <header class="header">
-        <!-- <h3>Insights</h3> -->
         <div class="controls">
             <div>
                 <DateRangePicker 
@@ -43,16 +48,13 @@
     
     <div class="section">
         <Totals 
-            {start} 
-            {end} 
-            categoriesUuids={selectedCategoriesUuids}
+            totalIncome={$insightsData?.totalIncome}
+            totalExpense={$insightsData?.totalExpense}
         />
     </div>
     <div class="section">
-        <TotalByCategory 
-            {start} 
-            {end}
-            categoriesUuids={selectedCategoriesUuids}
+        <TotalByCategory
+            data={$insightsData?.categorySummary}
         />
     </div>
     <div class="section">
