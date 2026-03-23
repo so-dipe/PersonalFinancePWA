@@ -2,18 +2,8 @@ import Dexie, { liveQuery } from "dexie";
 import { db } from "$lib/db";
 import { writable } from "svelte/store";
 import { BATCH_SIZE } from "$lib/constants/constants";
-import { getActiveCategories } from "../categories";
+import { getActiveCategories, mapTransactionsWithCategories } from "../categories";
 
-async function mapTransactionsWithCategories(transactions, categories) {
-    const categoryMap = Object.fromEntries(
-        categories.map(c => [c.uuid, c.name])
-    );
-
-    return transactions.map(tx => ({
-        ...tx,
-        category: categoryMap[tx.categoryUuid] ?? 'Unknown'
-    }))
-}
 
 export function useLazyTransactions() {
     const { subscribe, set, update } = writable({
@@ -24,7 +14,6 @@ export function useLazyTransactions() {
     });
 
     let catPromise = getActiveCategories();
-    // let existingUuids = new Set();
 
     async function loadMore() {
         let currentState;
@@ -56,10 +45,7 @@ export function useLazyTransactions() {
             .toArray();
 
         const enriched = await mapTransactionsWithCategories(nextBatch, categories);
-
-        // const filtered = enriched.filter(tx => !existingUuids.has(tx.uuid));
-
-        // filtered.forEach(tx => existingUuids.add(tx.uuid));
+        console.log(enriched);
 
         const lastItem = nextBatch.at(-1);
 

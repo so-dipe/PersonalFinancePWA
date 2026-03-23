@@ -1,6 +1,6 @@
 import { db } from "$lib/db";
-import { liveQuery } from "dexie";
-import { getActiveCategories } from "../categories";
+import Dexie, { liveQuery } from "dexie";
+import { getActiveCategories, mapTransactionsWithCategories } from "../categories";
 import { getAllDays, groupTransactionsByDay, indexByUuid, summariseByCategory } from "./agg/helpers";
 
 export function liveTransactionsBetween(start, end) {
@@ -111,5 +111,58 @@ export function getAllYears() {
         return [
             ...new Set(years.map(d => new Date(d).getFullYear()))
         ];
+    });
+}
+
+export function liveInsights(start, end, selectedCategoryUuids = []) {
+    const categorySet = selectedCategoryUuids.length
+            ? new Set(selectedCategoryUuids)
+            : null;
+
+    return liveQuery(async () => {
+        const lowerBound = [0, start, Dexie.minKey]
+        const upperBound = [0, end, Dexie.maxKey]
+
+        const [transactions, categories] = await Promise.all([
+            db.transactions
+                .where('[deleted+date+uuid]')
+                .between(lowerBound, upperBound, true, true)
+                .toArray(),
+            getActiveCategories()
+        ]);
+
+        const categoryMap = indexByUuid(categories);
+
+        let totalIncome = 0;
+        let totalExpense = 0;
+        const byCategory = {};
+
+        for (const tx of transactions) {
+            if (categorySet && !categorySet.has(tx.categoryUuid)) continue;
+
+            const category = categoryMap[tx.categoryUuid];
+
+            if (category?.transactionType === "income") {
+                totalIncome += tx.amount;
+            } else {
+                totalExpense += tx.amount;
+            }
+
+            byCategory[tx.categoryUuid] = (byCategory[tx.categoryUuid] || 0) + tx.amount;
+        }
+
+        const categorySummary = Object.entries(byCategory).map(
+            ([uuid, total]) => ({
+                categoryUuid: uuid,
+                category: categoryMap[uuid],
+                total
+            })
+        );
+
+        return {
+            totalIncome,
+            totalExpense,
+            categorySummary
+        };
     });
 }

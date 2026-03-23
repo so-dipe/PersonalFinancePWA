@@ -178,3 +178,14 @@ export async function detectNewCategories(transactions) {
         .filter(([fp]) => !existingFingerprints.has(fp))
         .map(([, cat]) => cat);
 }
+
+export async function mapTransactionsWithCategories(transactions, categories) {
+    const categoryMap = Object.fromEntries(
+        categories.map(c => [c.uuid, c.name])
+    );
+
+    return transactions.map(tx => ({
+        ...tx,
+        category: categoryMap[tx.categoryUuid] ?? 'Unknown'
+    }))
+}
