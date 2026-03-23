@@ -46,7 +46,7 @@ export function formatAmount(tx) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })
-    return tx.transactionType === 'expense' ? `( ${formatted} )` : formatted
+    return tx.transactionType === 'expense' ? `(${formatted})` : formatted
 }
 
 export function decodeBase64Url(base64UrlString) {
