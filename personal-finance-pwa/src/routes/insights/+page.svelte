@@ -8,23 +8,27 @@
     import TotalByCategory from "$lib/features/insights/TotalByCategory.svelte";
     import Totals from "$lib/features/insights/Totals.svelte";
     import { liveInsights } from "$lib/domains/insights";
+    import { derived, writable } from "svelte/store";
 
 
     let start = new Date();
     let end = new Date();
 
-    $: startStr = '2026-03-01';//start.toISOString().slice(0, 10);
-    $: endStr = '2026-03-23';//end.toISOString().slice(0, 10);
+    $: startStr = start.toISOString().slice(0, 10);
+    $: endStr = end.toISOString().slice(0, 10);
 
     const categories = useCategories();
 
     let selectedCategoriesUuids = [];
 
-    for (const cat of $categories) {
-        selectedCategoriesUuids.push(cat.uuid);
-    }
+    const params = writable({ startStr, endStr, selectedCategoriesUuids });
+    $: params.set({ startStr, endStr, selectedCategoriesUuids });
 
-    $: insightsData = liveInsights(startStr, endStr, selectedCategoriesUuids);
+    const insightsData = derived(params, ($p, set) => {
+        const query = liveInsights($p.startStr, $p.endStr, $p.selectedCategoriesUuids);
+        const unsub = query.subscribe(set);
+        return unsub;
+    })
 
 </script>
 
