@@ -13,12 +13,16 @@
     let start = new Date();
     let end = new Date();
 
-    $: startStr = start.toISOString().slice(0, 10);
-    $: endStr = end.toISOString().slice(0, 10);
+    $: startStr = '2026-03-01';//start.toISOString().slice(0, 10);
+    $: endStr = '2026-03-23';//end.toISOString().slice(0, 10);
+
+    const categories = useCategories();
 
     let selectedCategoriesUuids = [];
 
-    const categories = useCategories();
+    for (const cat of $categories) {
+        selectedCategoriesUuids.push(cat.uuid);
+    }
 
     $: insightsData = liveInsights(startStr, endStr, selectedCategoriesUuids);
 
