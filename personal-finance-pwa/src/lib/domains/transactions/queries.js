@@ -19,54 +19,56 @@ export function useLazyTransactions() {
     const { subscribe, set, update } = writable({
         transactions: [],
         loading: false,
-        offset: 0,
-        // lastDate: 0,
+        lastCursor: null,
         hasMore: true,
     });
 
+    let catPromise = getActiveCategories();
+    // let existingUuids = new Set();
+
     async function loadMore() {
-        let state;
+        let currentState;
+
         update(s => {
-            state = s;
+            if (s.loading || !s.hasMore) return s;
+            currentState = s;
             return {...s, loading: true};
         });
 
-        const categories = await getActiveCategories();
+        if (!currentState) return;
 
-        // let collection = db.transactions
-        //     .where('[deleted+date]')
-        //     .between([0, Dexie.minKey], [0, Dexie.maxKey])
-        //     .reverse();
+        const categories = await catPromise;
 
-        // if (state.lastDate) {
-        //     collection = collection.filter(tx => tx.date < state.lastDate);
-        // }
+        const lowerBound = [0, Dexie.minKey, Dexie.minKey]
 
-        // const nextBatch = await collection
-        //     .limit(BATCH_SIZE)
-        //     .toArray();
-
-        // update(s => ({
-        //     transactions: [...s.transactions, ...nextBatch],
-        //     loading: false,
-        //     lastDate: nextBatch.at(-1)?.date ?? s.lastDate,
-        //     hasMore: nextBatch.length === BATCH_SIZE
-        // }));
+        const upperBound = currentState.lastCursor 
+            ? [0, currentState.lastCursor.date, currentState.lastCursor.uuid]
+            : [0, Dexie.maxKey, Dexie.maxKey];
 
         const nextBatch = await db.transactions
-            .where('[deleted+date]')
-            .between([0, Dexie.minKey], [0, Dexie.maxKey])
+            .where('[deleted+date+uuid]')
+            .between(
+                lowerBound, upperBound,
+                true, false
+            )
             .reverse()
-            .offset(state.offset)
             .limit(BATCH_SIZE)
             .toArray();
 
         const enriched = await mapTransactionsWithCategories(nextBatch, categories);
 
-        update(state => ({
-            transactions: [...state.transactions, ...enriched],
+        // const filtered = enriched.filter(tx => !existingUuids.has(tx.uuid));
+
+        // filtered.forEach(tx => existingUuids.add(tx.uuid));
+
+        const lastItem = nextBatch.at(-1);
+
+        update(s => ({
+            transactions: [...s.transactions, ...enriched],
             loading: false,
-            offset: state.offset + nextBatch.length,
+            lastCursor: lastItem
+                ? { date: lastItem.date, uuid: lastItem.uuid }
+                : s.lastCursor,
             hasMore: nextBatch.length === BATCH_SIZE
         }));
     }
@@ -86,7 +88,7 @@ export function getFrequentTransactions(limit=10) {
                     const key = JSON.stringify({
                         transactionType: tx.transactionType,
                         description: tx.description?.trim().toLowerCase(),
-                        amount: 0, //tx.amount,
+                        amount: "", //tx.amount,
                         categoryUuid: tx.categoryUuid
                     });
                     frequencyMap[key] = (frequencyMap[key] || 0) + 1;
