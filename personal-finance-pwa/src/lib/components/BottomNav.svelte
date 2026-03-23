@@ -103,7 +103,7 @@
         stroke-linejoin: round;
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 1023.99px) {
         .bottom-nav {
             display: grid;
         }

@@ -120,7 +120,7 @@
 
 
     /* Desktop width */
-    @media(min-width: 768px) {
+    @media(min-width: 720px) {
         .sidebar {
             width: 40%;
             max-width: 480px;
