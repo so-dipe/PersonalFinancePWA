@@ -16,8 +16,6 @@
     let filteredCategories;
 
     const lazyTransactions = useLazyTransactions();
-    
-    let observer;
 
     onMount(() => {
         lazyTransactions.loadMore();
@@ -78,71 +76,6 @@
         editingTx = null;
     }
 
-    async function exportCSV() {
-        try {
-            const [txs, activeCategories] = await Promise.all([
-                db.transactions
-                    .where('deleted')
-                    .equals(0)
-                    .sortBy('createdAt'),
-                categories?.length ? Promise.resolve(categories) : getActiveCategories()
-            ]);
-
-            if (!txs.length) {
-                notify({ type: "warning", message: "No transactions to export." });
-                return;
-            }
-
-            const categoryMap = Object.fromEntries(
-                (activeCategories ?? []).map(c => [c.uuid, c.name])
-            );
-
-            const header = ['Date', 'Type', 'Description', 'Amount', 'Category', 'Synced'];
-
-            const toCsvValue = (value) => {
-                if (value === null || value === undefined) return '';
-                const str = String(value);
-                return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-            };
-
-            const rows = txs.map(tx => {
-                const dateValue = typeof tx.date === 'string'
-                    ? tx.date
-                    : new Date(tx.date).toISOString().slice(0, 10);
-                const categoryName = categoryMap[tx.categoryUuid] ?? 'Unknown';
-                return [
-                    dateValue,
-                    tx.transactionType,
-                    tx.description ?? '',
-                    tx.amount ?? '',
-                    categoryName,
-                    tx.synced ? 'Yes' : 'No'
-                ].map(toCsvValue);
-            });
-
-            const csvContent = [header, ...rows]
-                .map(r => r.join(','))
-                .join('\n');
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `transactions-${new Date().toISOString().slice(0,10)}.csv`);
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            notify({ type: "success", message: "CSV exported!" });
-        } catch (err) {
-            console.error("CSV export failed", err);
-            notify({ type: "error", message: "CSV export failed." });
-        }
-    }
-
 </script>
 
 <div class="card transactions-container">
@@ -153,16 +86,10 @@
             <small>
                 (<a class="sync-status" on:click={manualSync}>
                     {$syncState.inProgress ? $syncState.message : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}` }
-                    <!-- Last synced: {formatDateTime(new Date($sync?.lastSync))} -->
                 </a>)
             </small>
         {/if}
     </h3>
- <div class="export-footer">
-        <button class="export-btn" on:click={exportCSV}>
-            Export CSV
-        </button>
-    </div>
     </div>
    
     <div class="table-wrapper" on:scroll={onScroll}>
@@ -219,24 +146,5 @@
 
 tbody td:nth-child(4) {
     text-align: right;
-}
-
-.export-footer {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    padding: 0.5rem;
-    text-align: right;
-    border-top: 1px solid #eee;
-}
-
-.export-btn {
-    background: var(--green-900);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-weight: 600;
 }
 </style>
