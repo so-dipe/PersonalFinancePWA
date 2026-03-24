@@ -143,3 +143,13 @@ export function getTransactionsByCategory(categoryUuid, start, end) {
         return txs.toArray()
     });
 }
+
+export async function getTransactionsBetweenDates(start, end) {
+    const lowerBound = [0, start, Dexie.minKey];
+    const upperBound = [0, end, Dexie.maxKey];
+    
+    return db.transactions
+        .where('[deleted+date+uuid]')
+        .between(lowerBound, upperBound, true, true)
+        .toArray();
+}
