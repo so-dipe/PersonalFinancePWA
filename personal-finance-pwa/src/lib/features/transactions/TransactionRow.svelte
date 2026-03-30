@@ -15,7 +15,9 @@
 
     const sync = useSetting('sync');
 
-    $: filteredCategories = editingTx?.transactionType ? categories?.filter((c) => c.transactionType === editingTx?.transactionType) : [];
+    $: filteredCategories = editingTx?.transactionType 
+        ? categories?.filter((c) => c.transactionType === editingTx?.transactionType) 
+        : [];
 </script>
 
 <tr class={isEditing ? "editing" : ""}>
@@ -59,7 +61,8 @@
     <td>
         {#if isEditing}
             <select bind:value={editingTx.categoryUuid}>
-                {#each filteredCategories as cat}
+                <!-- {#each filteredCategories as cat} -->
+                {#each categories as cat}
                     <option value={cat.uuid}>{cat.name}</option>
                 {/each}
             </select>

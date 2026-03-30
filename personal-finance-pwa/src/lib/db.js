@@ -41,6 +41,11 @@ db.version(3).stores({
     transactions: baseSchema.transactions + ", [deleted+date+uuid]"
 });
 
+db.version(4).stores({
+    ...baseSchema,
+    transactions: baseSchema.transactions + ", [deleted+date+modifiedAt+uuid]"
+})
+
 db.on("populate", loadDefaultCategories);
 db.on("ready", async () => {
     const exists = await db.categories.limit(1).count();

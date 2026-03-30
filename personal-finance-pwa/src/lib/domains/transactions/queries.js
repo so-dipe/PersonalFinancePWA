@@ -6,57 +6,70 @@ import { getActiveCategories, mapTransactionsWithCategories } from "../categorie
 
 
 export function useLazyTransactions() {
-    const { subscribe, set, update } = writable({
+    let currentLimit = BATCH_SIZE;
+
+    const { subscribe, update } = writable({
         transactions: [],
         loading: false,
-        lastCursor: null,
         hasMore: true,
+        limit: BATCH_SIZE
     });
 
-    let catPromise = getActiveCategories();
+    let unsubscribeLive;
+
+    function startLiveQuery(limit) {
+        if (unsubscribeLive) unsubscribeLive();
+
+        unsubscribeLive = liveQuery(async () => {
+            const categories = await getActiveCategories();
+            const transactions = await db.transactions
+                .where('[deleted+date+modifiedAt+uuid]')
+                .between(
+                    [0, Dexie.minKey, Dexie.minKey],
+                    [0, Dexie.maxKey, Dexie.maxKey]
+                )
+                .reverse()
+                .limit(limit + 1)
+                .toArray();
+            
+            const visible = transactions.slice(0, limit)
+            const enrichedTxns = await mapTransactionsWithCategories(visible, categories);
+
+            return {
+                transactions: enrichedTxns,
+                hasMore: transactions.length > limit
+            };
+        }).subscribe(result => {
+            update(s => ({
+                ...s,
+                transactions: result.transactions,
+                hasMore: result.hasMore,
+                loading: false
+            }));
+        });
+    }
 
     async function loadMore() {
-        let currentState;
+        let shouldLoad;
 
         update(s => {
             if (s.loading || !s.hasMore) return s;
-            currentState = s;
-            return {...s, loading: true};
+            shouldLoad = true;
+
+            return {
+                ...s,
+                loading: true
+            };
         });
 
-        if (!currentState) return;
+        if (!shouldLoad) return;
 
-        const categories = await catPromise;
+        currentLimit += BATCH_SIZE
 
-        const lowerBound = [0, Dexie.minKey, Dexie.minKey]
-
-        const upperBound = currentState.lastCursor 
-            ? [0, currentState.lastCursor.date, currentState.lastCursor.uuid]
-            : [0, Dexie.maxKey, Dexie.maxKey];
-
-        const nextBatch = await db.transactions
-            .where('[deleted+date+uuid]')
-            .between(
-                lowerBound, upperBound,
-                true, false
-            )
-            .reverse()
-            .limit(BATCH_SIZE)
-            .toArray();
-
-        const enriched = await mapTransactionsWithCategories(nextBatch, categories);
-
-        const lastItem = nextBatch.at(-1);
-
-        update(s => ({
-            transactions: [...s.transactions, ...enriched],
-            loading: false,
-            lastCursor: lastItem
-                ? { date: lastItem.date, uuid: lastItem.uuid }
-                : s.lastCursor,
-            hasMore: nextBatch.length === BATCH_SIZE
-        }));
+        startLiveQuery(currentLimit);
     }
+
+    startLiveQuery(currentLimit);
 
     return { subscribe, loadMore }
 }

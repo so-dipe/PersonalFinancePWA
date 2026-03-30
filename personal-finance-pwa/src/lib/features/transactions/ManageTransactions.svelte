@@ -1,11 +1,12 @@
 <script>
     import { onMount } from "svelte";
-    import { readable } from "svelte/store";
-    import { liveQuery } from "dexie";
-    import { formatDate, formatDateTime, formatFinancial } from "$lib/utils";
     import { runSync } from "$lib/sync/runSync";
-    import { db } from "$lib/db";
-    import { editTransaction, deleteTransaction, useTransactions, useLazyTransactions } from "$lib/domains/transactions";
+    import { 
+        editTransaction, 
+        deleteTransaction, 
+        // useTransactions, 
+        useLazyTransactions
+     } from "$lib/domains/transactions";
     import { useCategories } from "$lib/domains/categories";
     import { useSetting } from "$lib/domains/settings";
     import { notify } from "$lib/stores/notification.store";
@@ -13,24 +14,22 @@
     import TransactionRow from "./TransactionRow.svelte";
 
     const categories = useCategories();
-    let filteredCategories;
-
-    const lazyTransactions = useLazyTransactions();
-
-    onMount(() => {
-        lazyTransactions.loadMore();
-    });
-
-    function onScroll(event) {
-        const wrapper = event.target;
-        if (wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 50) {
-            $lazyTransactions.hasMore && lazyTransactions.loadMore();
-        }
-    }
 
     let editingTx = null;
 
+    const lazyTransactions = useLazyTransactions();
+
     const sync = useSetting('sync');
+
+    function onScroll(event) {
+        const wrapper = event.target;
+        if (
+            wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 50 &&
+            !$lazyTransactions.loading && $lazyTransactions.hasMore
+        ) {
+            lazyTransactions.loadMore();
+        }
+    }
 
     async function manualSync() {
         try {
@@ -108,17 +107,15 @@
             </tr>
         </thead>
         <tbody>
-            {#if !$lazyTransactions}
+            {#if !$lazyTransactions.loading && $lazyTransactions.transactions.length === 0}
                 <tr><td colspan="7">Loading...</td></tr>
-            {:else if $lazyTransactions.length === 0}
-                <tr><td colspan="7">No transactions found.</td></tr>
             {:else}
                 {#each $lazyTransactions.transactions as tx (tx.id)}
                     <TransactionRow
                         {tx}
                         isEditing={editingTx?.id === tx.id}
                         editingTx={editingTx}
-                        {categories}
+                        categories={$categories}
                         onEdit={() => startEdit(tx)}
                         onSave={saveEdit}
                         onCancel={cancelEdit}
@@ -126,7 +123,7 @@
                     />
                 {/each}
             {/if}
-            {#if $lazyTransactions?.loading}
+            {#if $lazyTransactions?.loading && $lazyTransactions.transactions.length > 0}
                 <tr><td colspan="7">Loading more transactions...</td></tr>
             {/if}
         </tbody>
