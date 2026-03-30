@@ -61,8 +61,7 @@
     <td>
         {#if isEditing}
             <select bind:value={editingTx.categoryUuid}>
-                <!-- {#each filteredCategories as cat} -->
-                {#each categories as cat}
+                {#each filteredCategories as cat}
                     <option value={cat.uuid}>{cat.name}</option>
                 {/each}
             </select>

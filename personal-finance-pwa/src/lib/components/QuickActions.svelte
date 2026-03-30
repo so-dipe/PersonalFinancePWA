@@ -35,7 +35,8 @@
                     </span>
                     <span class="qa-text">
                         <span class="qa-title">{tx.description}</span>
-                        <span class="qa-meta">{tx.category} • {formatAmount(tx)}</span>
+                        <!-- <span class="qa-meta">{tx.category} • {formatAmount(tx)}</span> -->
+                        <span class="qa-meta">{tx.category}</span>
                     </span>
                 </button>
             {/each}
