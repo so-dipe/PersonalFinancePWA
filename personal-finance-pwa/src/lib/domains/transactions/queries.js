@@ -70,7 +70,6 @@ export function useLazyTransactions() {
     }
 
     startLiveQuery(currentLimit);
-    console.log(typeof unsubscribeLive, unsubscribeLive);
 
     return { subscribe, loadMore }
 }

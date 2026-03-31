@@ -11,6 +11,7 @@
     import { useSetting } from "$lib/domains/settings";
     import { notify } from "$lib/stores/notification.store";
     import { syncState } from "$lib/stores/sync.store";
+    import { formatDateTime } from "$lib/utils";
     import TransactionRow from "./TransactionRow.svelte";
 
     const categories = useCategories();
