@@ -158,11 +158,11 @@ export function getTransactionsByCategory(categoryUuid, start, end) {
 }
 
 export async function getTransactionsBetweenDates(start, end) {
-    const lowerBound = [0, start, Dexie.minKey];
-    const upperBound = [0, end, Dexie.maxKey];
+    const lowerBound = [0, start, Dexie.minKey, Dexie.minKey];
+    const upperBound = [0, end, Dexie.maxKey, Dexie.maxKey];
     
     return db.transactions
-        .where('[deleted+date+uuid]')
+        .where('[deleted+date+modifiedAt+uuid]')
         .between(lowerBound, upperBound, true, true)
         .toArray();
 }
