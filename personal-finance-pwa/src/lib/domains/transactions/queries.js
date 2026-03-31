@@ -18,15 +18,15 @@ export function useLazyTransactions() {
     let unsubscribeLive;
 
     function startLiveQuery(limit) {
-        if (unsubscribeLive) unsubscribeLive();
+        if (unsubscribeLive) unsubscribeLive.unsubscribe();
 
         unsubscribeLive = liveQuery(async () => {
             const categories = await getActiveCategories();
             const transactions = await db.transactions
                 .where('[deleted+date+modifiedAt+uuid]')
                 .between(
-                    [0, Dexie.minKey, Dexie.minKey],
-                    [0, Dexie.maxKey, Dexie.maxKey]
+                    [0, Dexie.minKey, Dexie.minKey, Dexie.minKey],
+                    [0, Dexie.maxKey, Dexie.minKey, Dexie.maxKey]
                 )
                 .reverse()
                 .limit(limit + 1)
@@ -70,6 +70,7 @@ export function useLazyTransactions() {
     }
 
     startLiveQuery(currentLimit);
+    console.log(typeof unsubscribeLive, unsubscribeLive);
 
     return { subscribe, loadMore }
 }
