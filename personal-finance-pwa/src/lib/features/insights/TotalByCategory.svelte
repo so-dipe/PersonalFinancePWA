@@ -18,15 +18,15 @@
 
         const typeOrder = { income: 0, expense: 1}
         rawData.sort((a, b) => {
-            const typeDiff = typeOrder[a.category.transactionType] - typeOrder[b.category.transactionType];
+            const typeDiff = typeOrder[a.category?.transactionType] - typeOrder[b.category?.transactionType];
             if (typeDiff !== 0) return typeDiff;
             return b.total - a.total;
         })
 
         barChartData = rawData.map(d => ({
-            x: d.category.name,
+            x: d.category?.name,
             y: d.total,
-            color: TYPE_COLORS[d.category.transactionType]
+            color: TYPE_COLORS[d.category?.transactionType]
         }));
     }
 </script>
