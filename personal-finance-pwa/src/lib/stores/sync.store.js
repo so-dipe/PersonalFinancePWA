@@ -20,6 +20,7 @@ export function createProgressReporter() {
     return {
         setTotal(n) {
             total = n;
+            current = 0;
         },
         step(message, extra = {}) {
             current++;
