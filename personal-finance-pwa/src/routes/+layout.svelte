@@ -40,13 +40,8 @@
 
 
 <div class="app">
-    <!-- <header class="app-header">
-        <div class="center">
-            <span class="app-logo">kobo</span>
-        </div>
-    </header> -->
     <Notifications />
-    <ProfileMenu bind:sidebarOpen={sidebarOpen} />
+    <!-- <ProfileMenu bind:sidebarOpen={sidebarOpen} /> -->
     <Sidebar open={sidebarOpen} on:close={closeSidebar} />
     <BottomNav />
 

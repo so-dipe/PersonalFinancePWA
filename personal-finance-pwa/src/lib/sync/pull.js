@@ -12,33 +12,37 @@ function extractRemoteProps(file) {
     }
 }
 
-export async function pullSession(getRemoteFiles, downloadFile) {
+export async function pullSession(
+    getRemoteFiles, 
+    downloadFile,
+    progress
+) {
 
     // 1️⃣ Pull categories first
     const { pulledCat, mergedCat } = await pullCategories(
         await getRemoteFiles("categories"),
-        downloadFile
+        downloadFile, progress
     );
 
     // 2️⃣ Pull transactions
     const { pulledTxs, mergedTxs } = await pullEntity(
         "transactions",
         await getRemoteFiles("transactions"),
-        downloadFile
+        downloadFile, progress
     );
 
     // 3️⃣ Pull budgets
     const { pulledBud, mergedBud } = await pullEntity(
         "budgets",
         await getRemoteFiles("budgets"),
-        downloadFile
+        downloadFile, progress
     );
 
     // 4️⃣ Pull settings
     const { pulledSet, mergedSet } = await pullEntity(
         "settings",
         await getRemoteFiles("settings"),
-        downloadFile
+        downloadFile, progress
     );
 
     return {
@@ -50,11 +54,19 @@ export async function pullSession(getRemoteFiles, downloadFile) {
 }
 
 
-export async function pullEntity(entity, remoteFiles, downloadFile) {
+export async function pullEntity(entity, remoteFiles, downloadFile, progress) {
     let pulled = 0;
     let merged = 0;
 
+    progress.setTotal(remoteFiles.length);
+
     for (const file of remoteFiles) {
+
+        progress.step(
+            `Downloading ${entity}...`,
+            { entity, phase: 'pulling' }
+        );
+
         const uuid = file.name.replace('.json', '').replace(`${entity}-`, '');
         
         const local = await db[entity].where('uuid').equals(uuid).first();
@@ -103,10 +115,19 @@ export async function pullEntity(entity, remoteFiles, downloadFile) {
     return { pulled, merged };
 }
 
-export async function pullCategories(remoteFiles, downloadFile, context) {
+export async function pullCategories(remoteFiles, downloadFile, progress) {
+
     let pulled = 0, merged = 0;
 
+    progress.setTotal(remoteFiles.length);
+
     for (const file of remoteFiles) {
+
+        progress.step(
+            `Downloading Categories...`,
+            { entity: 'categories', phase: 'pulling' }
+        );
+
         const uuid = file.name.replace('.json', '').replace('categories-', '');
         const local = await db.categories
             .where('uuid')

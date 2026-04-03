@@ -79,17 +79,37 @@
 </script>
 
 <div class="card transactions-container">
-    <div style="display: flex; flex-direction: row; justify-content: space-between;">
- <h3>
-        Transactions
+    <div style="display: flex; gap: var(--space-md); align-items: center;">
+        <h3 style="margin: 0;">Transactions</h3>
+
         {#if $sync?.enabled}
-            <small>
-                (<a class="sync-status" on:click={manualSync}>
-                    {$syncState.inProgress ? $syncState.message : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}` }
-                </a>)
-            </small>
+            <button class="sync-status" on:click={manualSync} disabled={$syncState.inProgress}>
+                <span class="sync-dot" class:syncing={$syncState.inProgress}></span>
+                <span>
+                    {$syncState.inProgress
+                        ? $syncState.message 
+                        : `Last synced: ${formatDateTime(new Date($sync?.lastSync))}` }
+                </span>
+            </button>
+
+            {#if $syncState.inProgress}
+                <div class="progress-wrapper">
+                    <div class="progress-bar">
+                        <div
+                            class="progress-fill"
+                            style="width: {$syncState.progress?.percentage || 0}%"
+                        ></div>
+                    </div>
+
+                    <div class="progress-meta">
+                        <span>{$syncState.progress?.percentage || 0}%</span>
+                        <span>{$syncState.progress?.current || 0} / {$syncState.progress?.total || 0}</span>
+                        <span>{$syncState.phase}</span>
+                    </div>
+                </div>
+            {/if}
+
         {/if}
-    </h3>
     </div>
    
     <div class="table-wrapper" on:scroll={onScroll}>
@@ -109,7 +129,7 @@
         </thead>
         <tbody>
             {#if !$lazyTransactions.loading && $lazyTransactions.transactions.length === 0}
-                <tr><td colspan="7">Loading...</td></tr>
+                <tr><td colspan="7">No transactions Found!</td></tr>
             {:else}
                 {#each $lazyTransactions.transactions as tx (tx.id)}
                     <TransactionRow
@@ -144,5 +164,102 @@
 
 tbody td:nth-child(4) {
     text-align: right;
+}
+
+.sync-status {
+        border: 1px solid var(--gray-200);
+        background: var(--surface-2);
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--green-900);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+.sync-status:hover:not(:disabled) {
+    background: var(--green-100);
+    border-color: var(--green-500);
+}
+
+.sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--green-500);
+    box-shadow: 0 0 0 4px var(--green-100);
+}
+
+.sync-dot.syncing {
+    background: var(--amber-500);
+    box-shadow: 0 0 0 4px var(--amber-100);
+}
+
+.progress-wrapper {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        var(--green-500),
+        var(--green-700)
+    );
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: inherit;
+}
+
+/* Optional: animated shimmer while syncing */
+.progress-fill::after {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,0.4),
+        transparent
+    );
+    animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+}
+
+.progress-meta span {
+    display: flex;
+    align-items: center;
+}
+
+.progress-meta span:not(:last-child)::after {
+    content: "•";
+    margin: 0 0.5rem;
+    color: var(--gray-400);
 }
 </style>

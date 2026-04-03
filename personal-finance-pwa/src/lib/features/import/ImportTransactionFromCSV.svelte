@@ -41,7 +41,6 @@
         return raw
             .toString()
             .trim()
-            .toLowerCase()
     }
 
     function resolveCategories(transactions, categoryMap) {
@@ -173,7 +172,8 @@
 
             await addTransactionBulk(ready);
 
-            notify({ type: "success", message: `${ready.length} transactions imported.`})
+            notify({ type: "success", message: `${ready.length} transactions imported.`});
+            
             showDialog = false;
             transactions = []
         } catch (e) {

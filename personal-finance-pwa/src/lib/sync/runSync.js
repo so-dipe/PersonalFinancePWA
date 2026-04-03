@@ -15,7 +15,7 @@ export async function runSync() {
         inProgress: true,
         status: 'syncing',
         message: 'Syncing...'
-    })
+    });
 
     if (provider.init) await provider.init();
 
@@ -35,8 +35,6 @@ export async function runSync() {
         })
         throw e;
     }
-
-    // return syncAll(provider);
 }
 
 export async function runMicroSync(entity) {

@@ -1,4 +1,6 @@
+import { db } from "$lib/db";
 import { getSetting, setSetting } from "$lib/domains/settings"
+import { createProgressReporter, syncState } from "$lib/stores/sync.store";
 import { SYNC_ENTITIES } from "./config"
 import { pullSession } from "./pull"
 import { pushEntity } from "./push"
@@ -12,12 +14,33 @@ async function updateLastSynced() {
 }
 
 export async function syncAll(provider) {
-    let results = {};
+    const progress = createProgressReporter();
 
-    results = await pullSession(provider.listFiles, provider.downloadFile)
+    // const storesUnsyncedCount = await Promise.all(
+    //     Object.keys(SYNC_ENTITIES).map(async (entity) => {
+    //         const unsynced = await db[entity].where('synced').equals(0).count();
+    //         return unsynced;
+    //     })
+    // )
 
+    // const totalPushCount = storesUnsyncedCount.reduce((a, b) => a + b, 0);
+
+    // progress.setTotal(totalPushCount);
+
+    syncState.update(s => ({...s, phase: 'pulling'}));
+    const results = await pullSession(
+        provider.listFiles,
+        provider.downloadFile,
+        progress
+    )
+
+    syncState.update(s => ({...s, phase: 'pushing'}));
     for (const entity of Object.keys(SYNC_ENTITIES)) {
-        await pushEntity(entity, provider.uploadFile);
+        await pushEntity(
+            entity, 
+            provider.uploadFile,
+            progress
+        );
     }
 
     await updateLastSynced();
